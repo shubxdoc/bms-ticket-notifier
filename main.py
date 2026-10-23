@@ -1,7 +1,14 @@
 """
 BMS Ticket Checker — CI/Headless mode for GitHub Actions.
-Runs once, checks all configured watches, emails on changes.
-State is persisted via a JSON artifact.
+Runs once, checks all configured watches, notifies on changes.
+State is persisted via a JSON file committed back to the repo.
+
+Changes vs. upstream:
+  * merge_state: a date that fails to load (HTTP 403) keeps its old state,
+    so it no longer causes false "NEW" alerts on the next run.
+  * Telegram notifications (in addition to the optional Resend email).
+  * Duplicate shows (BMS falls back to the first open date for dates that
+    have not opened yet) are removed before filtering and reporting.
 
 Configure via environment variables or edit the CONFIG below.
 """
@@ -11,7 +18,7 @@ import re
 import sys
 import json
 from html import escape
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 import requests
@@ -33,7 +40,12 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 RESEND_TO_EMAIL = os.getenv("RESEND_TO_EMAIL", "")
 RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "aviiciii@resend.dev")
 
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
 STATE_FILE = "bms_state.json"
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # ──────────────────────────────────────────────────────────────────────
 # CONSTANTS
@@ -72,7 +84,7 @@ REGION_MAP = {
 }
 
 
-# ─────────────────────────────────────���────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────
 # DATA
 # ──────────────────────────────────────────────────────────────────────
 @dataclass
@@ -253,7 +265,6 @@ def parse_shows(data):
                     )
                     for cat in sa.get("categories", []):
                         ca = str(cat.get("availStatus", ""))
-                        lbl, _ = AVAIL_STATUS_MAP.get(ca, ("UNKNOWN", ""))
                         show.categories.append(CatInfo(
                             name=cat.get("priceDesc", ""),
                             price=cat.get("curPrice", "0"),
@@ -261,6 +272,15 @@ def parse_shows(data):
                         ))
                     shows.append(show)
     return shows
+
+
+def dedupe_shows(shows):
+    """BMS returns the first open date's shows for any date that has not
+    opened yet, so the same show can be collected several times."""
+    unique = {}
+    for s in shows:
+        unique[(s.venue_code, s.session_id, s.date_code, s.time)] = s
+    return list(unique.values())
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -344,6 +364,23 @@ def build_state(shows, dates):
     return {"shows": show_state, "dates": date_state}
 
 
+def merge_state(old_state, fetched_state):
+    """Keep previously saved entries that are missing from this run's
+    response (e.g. a date that returned HTTP 403), and overwrite entries
+    that were fetched. Without this, a failed date is forgotten and then
+    reported as NEW the next time it loads."""
+    return {
+        "shows": {
+            **old_state.get("shows", {}),
+            **fetched_state.get("shows", {}),
+        },
+        "dates": {
+            **old_state.get("dates", {}),
+            **fetched_state.get("dates", {}),
+        },
+    }
+
+
 def detect_changes(old_state, new_state):
     changes = []
 
@@ -360,7 +397,7 @@ def detect_changes(old_state, new_state):
     new_shows = new_state.get("shows", {})
 
     # New showtimes
-    for key in set(new_shows) - set(old_shows):
+    for key in sorted(set(new_shows) - set(old_shows)):
         s = new_shows[key]
         changes.append(
             f"🆕 NEW: {s['venue']} {s['time']} [{s['date']}] "
@@ -383,6 +420,70 @@ def detect_changes(old_state, new_state):
 
 
 # ──────────────────────────────────────────────────────────────────────
+# TELEGRAM NOTIFICATION
+# ──────────────────────────────────────────────────────────────────────
+def _pretty_date(date_code):
+    try:
+        return datetime.strptime(date_code, "%Y%m%d").strftime("%d %b")
+    except ValueError:
+        return date_code
+
+
+def _time_key(t):
+    """Sort '07:45 AM' / '03:25 PM' chronologically instead of as text."""
+    try:
+        return datetime.strptime(t.strip(), "%I:%M %p")
+    except ValueError:
+        return datetime.max
+
+
+def send_telegram(subject, changes, shows, movie_info):
+    token = TELEGRAM_BOT_TOKEN.strip()
+    chat_id = TELEGRAM_CHAT_ID.strip()
+    if not token or not chat_id:
+        print("  ⚠️  Skipping Telegram — TELEGRAM_BOT_TOKEN or "
+              "TELEGRAM_CHAT_ID not set.")
+        return
+
+    now_str = datetime.now(IST).strftime("%d %b, %I:%M %p IST")
+    lines = [f"🎬 {subject}", now_str, "", "Changes:"]
+    lines.extend(changes)
+
+    # Compact list of current shows: venue + date -> times
+    grouped = {}
+    for s in shows:
+        grouped.setdefault((s.venue_name, s.date_code), set()).add(s.time)
+    if grouped:
+        lines.extend(["", "Current shows:"])
+        for (venue, dc), times in sorted(grouped.items(),
+                                         key=lambda kv: (kv[0][1], kv[0][0])):
+            lines.append(f"{venue} · {_pretty_date(dc)}: "
+                         f"{', '.join(sorted(times, key=_time_key))}")
+
+    lines.extend(["", f"Book: {CONFIG['url']}"])
+    text = "\n".join(lines)
+    if len(text) > 4000:  # Telegram limit is 4096 characters
+        text = text[:3990] + "\n…"
+
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            json={
+                "chat_id": chat_id,
+                "text": text,
+                "disable_web_page_preview": True,
+            },
+            timeout=15,
+        )
+        if resp.status_code == 200:
+            print("  ✅ Telegram message sent")
+        else:
+            print(f"  ❌ Telegram {resp.status_code}: {resp.text}")
+    except requests.RequestException as e:
+        print(f"  ❌ Telegram failed: {e}")
+
+
+# ──────────────────────────────────────────────────────────────────────
 # EMAIL NOTIFICATION (Resend)
 # ──────────────────────────────────────────────────────────────────────
 def _cat_status_label(status):
@@ -398,7 +499,7 @@ def send_email(subject, changes, shows, movie_info):
         print("  ⚠️  Skipping email — RESEND_API_KEY or RESEND_TO_EMAIL not set.")
         return
 
-    now_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
+    now_str = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
     movie_name = movie_info.get("name", "Movie")
 
     # Build changes HTML
@@ -434,7 +535,7 @@ def send_email(subject, changes, shows, movie_info):
                 f'<tr>'
                 f'<td style="padding:5px 8px;border-bottom:1px solid #ddd;'
                 f'font-size:13px;vertical-align:top;">'
-                f'{escape(s.time)}{fmt}</td>'
+                f'{escape(_pretty_date(s.date_code))} {escape(s.time)}{fmt}</td>'
                 f'<td style="padding:5px 8px;border-bottom:1px solid #ddd;'
                 f'font-size:13px;vertical-align:top;">'
                 f'{cats}</td>'
@@ -448,7 +549,7 @@ def send_email(subject, changes, shows, movie_info):
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
             <tr style="background:#f5f5f5;">
                 <th style="padding:5px 8px;text-align:left;border-bottom:1px solid #ddd;
-                           font-weight:bold;">Time</th>
+                           font-weight:bold;">Date / Time</th>
                 <th style="padding:5px 8px;text-align:left;border-bottom:1px solid #ddd;
                            font-weight:bold;">Categories</th>
             </tr>
@@ -493,7 +594,8 @@ def send_email(subject, changes, shows, movie_info):
                 for c in s.categories
             )
             fmt = f" [{s.screen_attr}]" if s.screen_attr else ""
-            plain_lines.append(f"  {s.time}{fmt} - {cats}")
+            plain_lines.append(
+                f"  {_pretty_date(s.date_code)} {s.time}{fmt} - {cats}")
     plain_lines.extend(["", "This is an automated alert from BMS Ticket Notifier."])
     plain = "\n".join(plain_lines)
 
@@ -515,10 +617,8 @@ def send_email(subject, changes, shows, movie_info):
             print(f"  ✅ Email sent to {to}")
         else:
             print(f"  ❌ Resend {resp.status_code}: {resp.text}")
-            sys.exit(1)
     except requests.RequestException as e:
         print(f"  ❌ Email failed: {e}")
-        sys.exit(1)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -557,6 +657,7 @@ def main():
     # Fetch data for each date
     all_shows = []
     all_dates = []
+    failed_dates = []
     movie_info = {"name": "Unknown", "language": ""}
 
     for dc in date_list:
@@ -564,6 +665,7 @@ def main():
                          region_slug_r, lat, lon, geohash)
         if not data:
             print(f"  ⚠️  No data for date {dc or '(default)'}")
+            failed_dates.append(dc)
             continue
 
         if movie_info["name"] == "Unknown":
@@ -572,13 +674,19 @@ def main():
         all_dates.extend(parse_dates(data))
         all_shows.extend(parse_shows(data))
 
+    if failed_dates:
+        print(f"  ⚠️  {len(failed_dates)} of {len(date_list)} date(s) failed "
+              f"this run: {', '.join(d or '(default)' for d in failed_dates)}"
+              " (their previous state is kept)")
+
     if not all_shows:
         print("  ❌ No showtimes found.")
         sys.exit(0)
 
     print(f"  🎬 {movie_info['name']}  {movie_info['language']}")
 
-    # Apply filters
+    # Remove duplicate shows, then apply filters
+    all_shows = dedupe_shows(all_shows)
     filtered = filter_shows(
         all_shows,
         CONFIG["theatre"],
@@ -588,8 +696,8 @@ def main():
     print(f"  📊 {len(filtered)} showtime(s) after filters")
 
     # Build state & detect changes
-    new_state = build_state(filtered, all_dates)
     old_state = load_state()
+    new_state = merge_state(old_state, build_state(filtered, all_dates))
 
     changes = []
     if old_state:
@@ -601,10 +709,9 @@ def main():
         print(f"\n  ⚡ {len(changes)} change(s) detected:")
         for c in changes:
             print(f"     {c}")
-        send_email(
-            f"BMS Alert: {movie_info['name']} - {len(changes)} change(s)",
-            changes, filtered, movie_info,
-        )
+        subject = f"BMS Alert: {movie_info['name']} - {len(changes)} change(s)"
+        send_telegram(subject, changes, filtered, movie_info)
+        send_email(subject, changes, filtered, movie_info)
     else:
         print("  ✅ No changes since last check.")
 
