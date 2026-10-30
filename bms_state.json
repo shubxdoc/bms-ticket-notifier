@@ -103,6 +103,62 @@
       "cat": " EXECUTIVE + 3D Glass",
       "price": "325.00",
       "status": "3"
+    },
+    "PRHN|258258|20261109|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261109",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258455|20261109|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:45 AM",
+      "date": "20261109",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258260|20261109|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "07:25 PM",
+      "date": "20261109",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "2"
+    },
+    "PRHN|258262|20261109|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:15 PM",
+      "date": "20261109",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258489|20261110|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261110",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258490|20261110|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:45 AM",
+      "date": "20261110",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258491|20261111|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261111",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
     }
   },
   "dates": {
@@ -110,8 +166,8 @@
     "20261106": "AVAILABLE",
     "20261107": "AVAILABLE",
     "20261108": "AVAILABLE",
-    "20261109": "NOT_OPEN",
-    "20261110": "NOT_OPEN",
-    "20261111": "NOT_OPEN"
+    "20261109": "AVAILABLE",
+    "20261110": "AVAILABLE",
+    "20261111": "AVAILABLE"
   }
 }
