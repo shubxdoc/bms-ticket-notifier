@@ -1,9 +1,9 @@
 name: BMS Ticket Checker
 
 on:
-  schedule:
+  # schedule:
     # Every 5 minutes minutes
-    - cron: '*/5 * * * *'
+    # - cron: '*/5 * * * *'
   workflow_dispatch:  # Triggered by cron-job.org (or the manual button)
 
 jobs:
