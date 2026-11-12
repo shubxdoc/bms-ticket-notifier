@@ -32,7 +32,7 @@ CONFIG = {
         "https://in.bookmyshow.com/movies/chennai/dhurandhar-the-revenge/buytickets/ET00478890"
     ),
     "dates": os.getenv("BMS_DATES", ""),          # comma-separated YYYYMMDD, empty = from URL
-    "theatre": os.getenv("BMS_THEATRE", ""),       # substring filter, empty = all
+    "theatre": os.getenv("BMS_THEATRE", ""),       # e.g. "ALLU,Prasads,AAA:LED" or "Prasads:PCX,AAA:LED"
     "time_period": os.getenv("BMS_TIME", ""),      # e.g. "evening,night", empty = all
 }
 
@@ -103,6 +103,7 @@ class ShowInfo:
     time: str
     time_code: str
     screen_attr: str
+    lang_format: str = ""
     categories: list[CatInfo] = field(default_factory=list)
 
 @dataclass
@@ -115,12 +116,12 @@ class DateInfo:
 # URL PARSER + REGION RESOLVER
 # ──────────────────────────────────────────────────────────────────────
 def parse_bms_url(url):
-    path = urlparse(url).path.strip("/")
+    path = urlparse(url.strip()).path.strip("/")
     parts = path.split("/")
     result = {"event_code": None, "date_code": None, "region_slug": None}
     for p in parts:
-        if re.match(r"^ET\d{8,}$", p):
-            result["event_code"] = p
+        if re.match(r"^ET\d{8,}$", p, re.I):
+            result["event_code"] = p.upper()
         elif re.match(r"^\d{8}$", p):
             result["date_code"] = p
     if "movies" in parts:
@@ -145,11 +146,18 @@ API_URL = (
     "showtimes-by-event/primary-dynamic"
 )
 
-# Three distinct TLS + header profiles:
-# 0: macOS Chrome 120 (succeeded on your last run!)
-# 1: macOS Safari 17.0 (WebKit TLS stack, no sec-ch-ua headers)
-# 2: Windows Chrome 124
+# Profile 0 is now safari17_0 (WebKit TLS), which bypassed BMS's 403 immediately
 BROWSER_PROFILES = [
+    {
+        "impersonate": "safari17_0",
+        "headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                "Version/17.0 Safari/605.1.15"
+            ),
+        },
+    },
     {
         "impersonate": "chrome120",
         "headers": {
@@ -161,16 +169,6 @@ BROWSER_PROFILES = [
             "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
             "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": '"macOS"',
-        },
-    },
-    {
-        "impersonate": "safari17_0",
-        "headers": {
-            "User-Agent": (
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                "AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                "Version/17.0 Safari/605.1.15"
-            ),
         },
     },
     {
@@ -190,7 +188,7 @@ BROWSER_PROFILES = [
 
 MAX_ATTEMPTS = 3
 RETRY_DELAYS = (2.5, 4.5)
-INTER_DATE_DELAY = 2.0        # pause between dates so we don't trip burst limits
+INTER_DATE_DELAY = 2.0
 RETRY_BUDGET_SECONDS = 120
 RETRYABLE_STATUS = {403, 429, 500, 502, 503, 504}
 BLOCK_ALERT_AFTER = 3
@@ -199,7 +197,6 @@ RUN_STARTED = time.monotonic()
 
 
 def create_session(profile_idx=0):
-    """Create a browser-impersonating session (curl_cffi if available, else requests)."""
     profile = BROWSER_PROFILES[profile_idx % len(BROWSER_PROFILES)]
     if HAS_CFFI:
         s = cffi_requests.Session(impersonate=profile["impersonate"])
@@ -222,7 +219,6 @@ def create_session(profile_idx=0):
 
 def fetch_bms(event_code, date_code, region_code, region_slug,
               lat, lon, geohash, session=None, start_profile=0):
-    """Returns (data_dict_or_None, working_session, working_profile_idx)."""
     active_session = session or create_session(start_profile)
     active_profile = start_profile
 
@@ -259,7 +255,6 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
             )
             if resp.status_code == 200:
                 try:
-                    # Keep this working session and profile for the next dates!
                     return resp.json(), active_session, active_profile
                 except ValueError:
                     reason = "response was not JSON"
@@ -318,7 +313,7 @@ def parse_dates(data):
     return dates
 
 
-def parse_shows(data):
+def parse_shows(data, lang_format=""):
     shows = []
     for w in data.get("data", {}).get("showtimeWidgets", []):
         if w.get("type") != "groupList":
@@ -343,6 +338,16 @@ def parse_shows(data):
                             r"^\d{8}", sa.get("cutOffDateTime", "")):
                         date_code = sa["cutOffDateTime"][:8]
 
+                    raw_screen = (st.get("screenAttr", "")
+                                  or sa.get("attributes", ""))
+                    # If tracking both 2D and 3D, tag the format alongside screen_attr
+                    if lang_format and raw_screen:
+                        display_attr = f"{raw_screen} · {lang_format}"
+                    elif lang_format:
+                        display_attr = lang_format
+                    else:
+                        display_attr = raw_screen
+
                     show = ShowInfo(
                         venue_code=vcode,
                         venue_name=vname,
@@ -350,8 +355,8 @@ def parse_shows(data):
                         date_code=date_code,
                         time=st.get("title", ""),
                         time_code=sa.get("showTimeCode", ""),
-                        screen_attr=(st.get("screenAttr", "")
-                                     or sa.get("attributes", "")),
+                        screen_attr=display_attr,
+                        lang_format=lang_format,
                     )
                     for cat in sa.get("categories", []):
                         ca = str(cat.get("availStatus", ""))
@@ -372,26 +377,56 @@ def dedupe_shows(shows):
 
 
 # ──────────────────────────────────────────────────────────────────────
-# FILTERING
+# FILTERING (Supports "Theatre" and "Theatre:Screen" rules)
 # ──────────────────────────────────────────────────────────────────────
+def parse_theatre_rules(theatre_filter):
+    """
+    Parse 'ALLU,Prasads,AAA:LED' into a list of (venue_kw, screen_kw) tuples.
+    - 'Prasads' -> ('prasads', None) matches any screen at Prasads
+    - 'AAA:LED' -> ('aaa', 'led') matches AAA only when screen_attr contains 'led'
+    """
+    rules = []
+    if not theatre_filter:
+        return rules
+    for item in theatre_filter.split(","):
+        item = item.strip()
+        if not item:
+            continue
+        if ":" in item:
+            v_kw, s_kw = item.split(":", 1)
+            rules.append((v_kw.strip().lower(), s_kw.strip().lower()))
+        else:
+            rules.append((item.lower(), None))
+    return rules
+
+
 def filter_shows(shows, theatre_filter, time_periods, date_codes):
     result = []
-    kws = [k.strip().lower() for k in theatre_filter.split(",")
-           if k.strip()] if theatre_filter else []
+    rules = parse_theatre_rules(theatre_filter)
     periods = [p.strip().lower() for p in time_periods.split(",")
                if p.strip()] if time_periods else []
     dates_set = set(d.strip() for d in date_codes.split(",")
                     if d.strip()) if date_codes else set()
 
     for s in shows:
-        if kws:
+        # Theatre + optional Screen filter
+        if rules:
             name_lower = s.venue_name.lower()
-            if not any(k in name_lower for k in kws):
+            screen_lower = (s.screen_attr or "").lower()
+            matched_venue = False
+            for v_kw, s_kw in rules:
+                if v_kw in name_lower:
+                    if not s_kw or s_kw in screen_lower:
+                        matched_venue = True
+                        break
+            if not matched_venue:
                 continue
 
+        # Date filter
         if dates_set and s.date_code and s.date_code not in dates_set:
             continue
 
+        # Time period filter
         if periods:
             try:
                 tc = int(s.time_code)
@@ -536,7 +571,8 @@ def send_telegram(subject, changes, shows, movie_info):
             lines.append(f"{venue} · {_pretty_date(dc)}: "
                          f"{', '.join(sorted(times, key=_time_key))}")
 
-    lines.extend(["", f"Book: {CONFIG['url']}"])
+    first_url = CONFIG["url"].split(",")[0].strip()
+    lines.extend(["", f"Book: {first_url}"])
     text = "\n".join(lines)
     if len(text) > 4000:
         text = text[:3990] + "\n…"
@@ -708,30 +744,12 @@ def main():
     engine = "curl_cffi (Browser TLS)" if HAS_CFFI else "requests (standard)"
     print(f"[{now_str}] BMS Ticket Checker — CI mode [{engine}]")
 
-    parsed = parse_bms_url(CONFIG["url"])
-    event_code = parsed["event_code"]
-    region_slug = parsed["region_slug"]
-    url_date = parsed.get("date_code", "")
-
-    if not event_code or not region_slug:
-        print("  ❌ Invalid BMS_URL. Could not extract event/region.")
+    raw_urls = [u.strip() for u in CONFIG["url"].split(",") if u.strip()]
+    if not raw_urls:
+        print("  ❌ Invalid BMS_URL. No URL provided.")
         sys.exit(1)
 
-    region_code, region_slug_r, lat, lon, geohash = resolve_region(
-        region_slug
-    )
-
     raw_dates = CONFIG["dates"].strip()
-    if raw_dates:
-        date_list = [d.strip() for d in raw_dates.split(",") if d.strip()]
-    elif url_date:
-        date_list = [url_date]
-    else:
-        date_list = [""]
-
-    print(f"  Event: {event_code}  Region: {region_code}  "
-          f"Dates: {date_list}")
-
     old_state = load_state()
     prev_streak = int(old_state.get("fail_streak", 0) or 0)
 
@@ -740,49 +758,81 @@ def main():
 
     all_shows = []
     all_dates = []
-    failed_dates = []
-    open_dates_on_bms = set()
+    total_requests = 0
+    total_failed = 0
     movie_info = {"name": "Unknown", "language": ""}
 
-    for i, dc in enumerate(date_list):
-        # Once any earlier date succeeds, we know which dates are open in BMS's strip
-        if open_dates_on_bms and dc and dc not in open_dates_on_bms:
-            print(f"  ⏳ Date {dc} is not open on BMS yet — skipping fetch")
+    for u_idx, url in enumerate(raw_urls):
+        parsed = parse_bms_url(url)
+        event_code = parsed["event_code"]
+        region_slug = parsed["region_slug"]
+        url_date = parsed.get("date_code", "")
+
+        if not event_code or not region_slug:
+            print(f"  ❌ Skipping invalid URL: {url}")
             continue
 
-        if i > 0:
-            time.sleep(INTER_DATE_DELAY)
+        region_code, region_slug_r, lat, lon, geohash = resolve_region(region_slug)
 
-        data, session, current_profile = fetch_bms(
-            event_code, dc, region_code, region_slug_r,
-            lat, lon, geohash,
-            session=session,
-            start_profile=current_profile,
-        )
-        if not data:
-            print(f"  ⚠️  No data for date {dc or '(default)'}")
-            failed_dates.append(dc)
-            continue
+        if raw_dates:
+            date_list = [d.strip() for d in raw_dates.split(",") if d.strip()]
+        elif url_date:
+            date_list = [url_date]
+        else:
+            date_list = [""]
 
-        if movie_info["name"] == "Unknown":
-            movie_info = parse_movie_info(data)
+        print(f"\n🔎 Event: {event_code}  Region: {region_code}  Dates: {date_list}")
 
-        fetched_dates = parse_dates(data)
-        all_dates.extend(fetched_dates)
-        for d in fetched_dates:
-            if d.status in ("BOOKABLE", "AVAILABLE"):
-                open_dates_on_bms.add(d.date_code)
+        open_dates_on_bms = set()
+        failed_for_url = []
+        url_movie_info = {"name": "Unknown", "language": ""}
 
-        all_shows.extend(parse_shows(data))
+        for i, dc in enumerate(date_list):
+            if open_dates_on_bms and dc and dc not in open_dates_on_bms:
+                print(f"  ⏳ Date {dc} is not open on BMS yet — skipping fetch")
+                continue
 
-    if failed_dates:
-        print(f"  ⚠️  {len(failed_dates)} of {len(date_list)} date(s) failed "
-              f"this run: {', '.join(d or '(default)' for d in failed_dates)}"
-              " (their previous state is kept)")
+            if total_requests > 0:
+                time.sleep(INTER_DATE_DELAY)
+            total_requests += 1
 
-    if len(failed_dates) == len(date_list):
+            data, session, current_profile = fetch_bms(
+                event_code, dc, region_code, region_slug_r,
+                lat, lon, geohash,
+                session=session,
+                start_profile=current_profile,
+            )
+            if not data:
+                print(f"  ⚠️  No data for date {dc or '(default)'}")
+                failed_for_url.append(dc)
+                total_failed += 1
+                continue
+
+            if url_movie_info["name"] == "Unknown":
+                url_movie_info = parse_movie_info(data)
+            if movie_info["name"] == "Unknown":
+                movie_info = url_movie_info
+
+            fetched_dates = parse_dates(data)
+            all_dates.extend(fetched_dates)
+            for d in fetched_dates:
+                if d.status in ("BOOKABLE", "AVAILABLE"):
+                    open_dates_on_bms.add(d.date_code)
+
+            lang_fmt = url_movie_info.get("language", "") if len(raw_urls) > 1 else ""
+            all_shows.extend(parse_shows(data, lang_format=lang_fmt))
+
+        if url_movie_info["name"] != "Unknown":
+            print(f"  🎬 {url_movie_info['name']}  {url_movie_info['language']}")
+
+        if failed_for_url:
+            print(f"  ⚠️  {len(failed_for_url)} of {len(date_list)} date(s) failed "
+                  f"for {event_code}: {', '.join(d or '(default)' for d in failed_for_url)}"
+                  " (their previous state is kept)")
+
+    if total_requests > 0 and total_failed == total_requests:
         streak = prev_streak + 1
-        print(f"  ❌ Every date failed ({streak} run(s) in a row). "
+        print(f"\n  ❌ Every request failed ({streak} run(s) in a row). "
               "BookMyShow is refusing requests from this runner.")
         save_state({**old_state, "fail_streak": streak})
         if streak == BLOCK_ALERT_AFTER:
@@ -803,12 +853,10 @@ def main():
         )
 
     if not all_shows:
-        print("  ❌ No showtimes found.")
+        print("\n  ❌ No showtimes found.")
         if prev_streak:
             save_state({**old_state, "fail_streak": 0})
         sys.exit(0)
-
-    print(f"  🎬 {movie_info['name']}  {movie_info['language']}")
 
     all_shows = dedupe_shows(all_shows)
     filtered = filter_shows(
@@ -817,7 +865,7 @@ def main():
         CONFIG["time_period"],
         CONFIG["dates"],
     )
-    print(f"  📊 {len(filtered)} showtime(s) after filters")
+    print(f"\n  📊 {len(filtered)} total showtime(s) after filters")
 
     has_baseline = bool(old_state.get("shows") or old_state.get("dates"))
     new_state = merge_state(old_state, build_state(filtered, all_dates))
