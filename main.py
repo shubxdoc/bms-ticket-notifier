@@ -9,6 +9,12 @@ Changes vs. upstream:
   * Telegram notifications (in addition to the optional Resend email).
   * Duplicate shows (BMS falls back to the first open date for dates that
     have not opened yet) are removed before filtering and reporting.
+  * One requests.Session per run (cookies + connection reuse), and each
+    date is retried up to 3 times with a short pause and an alternate,
+    internally consistent browser profile when BookMyShow answers 403.
+  * If EVERY date fails on 3 runs in a row, you get a "requests are being
+    blocked" notice (and a "working again" notice afterwards), so a quiet
+    log can no longer hide a total block.
 
 Configure via environment variables or edit the CONFIG below.
 """
@@ -17,6 +23,7 @@ import os
 import re
 import sys
 import json
+import time
 from html import escape
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
@@ -145,32 +152,71 @@ API_URL = (
 )
 
 
-def fetch_bms(event_code, date_code, region_code, region_slug,
-              lat, lon, geohash):
-    headers = {
+# Two internally consistent browser profiles. The User-Agent and the
+# client-hint headers must agree with each other, otherwise the mismatch
+# itself looks like a bot. Attempt 1 uses the first profile, attempt 2 the
+# second, attempt 3 the first again.
+BROWSER_PROFILES = [
+    {
         "User-Agent": (
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/145.0.0.0 Safari/537.36"
         ),
+        "sec-ch-ua": '"Chromium";v="145", "Not:A-Brand";v="99"',
+        "sec-ch-ua-platform": '"macOS"',
+    },
+    {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        ),
+        "sec-ch-ua": ('"Chromium";v="124", "Google Chrome";v="124", '
+                      '"Not-A.Brand";v="99"'),
+        "sec-ch-ua-platform": '"Windows"',
+    },
+]
+
+MAX_ATTEMPTS = 3              # tries per date
+RETRY_DELAYS = (1.5, 3.0)     # seconds to wait before try 2 and try 3
+RETRY_BUDGET_SECONDS = 120    # stop retrying once the run has used this long
+RETRYABLE_STATUS = {403, 429, 500, 502, 503, 504}
+BLOCK_ALERT_AFTER = 3         # runs in a row where EVERY date failed
+
+RUN_STARTED = time.monotonic()
+
+
+def create_session():
+    """One Session per run. It keeps the cookies BookMyShow sets and reuses
+    the connection, the way a browser does, instead of presenting every
+    request as a brand-new anonymous client."""
+    s = requests.Session()
+    s.headers.update({
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
-        "Referer": (
-            f"https://in.bookmyshow.com/movies/"
-            f"{region_slug}/buytickets/{event_code}/"
-        ),
-        "sec-ch-ua": '"Chromium";v="145", "Not:A-Brand";v="99"',
         "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"macOS"',
         "x-app-code": "WEB",
-        "x-region-code": region_code,
-        "x-region-slug": region_slug,
-        "x-geohash": geohash,
-        "x-latitude": lat,
-        "x-longitude": lon,
         "x-location-selection": "manual",
         "x-lsid": "",
-    }
+        **BROWSER_PROFILES[0],
+    })
+    # Warm-up visit so BookMyShow can set its cookies. Failure is harmless.
+    try:
+        s.get(
+            "https://in.bookmyshow.com/",
+            headers={"Accept": "text/html,application/xhtml+xml,"
+                               "application/xml;q=0.9,*/*;q=0.8"},
+            timeout=15,
+        )
+    except requests.RequestException:
+        pass
+    return s
+
+
+def fetch_bms(event_code, date_code, region_code, region_slug,
+              lat, lon, geohash, session=None):
+    session = session or requests.Session()
     params = {
         "eventCode": event_code,
         "dateCode": date_code or "",
@@ -180,14 +226,44 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
         "memberId": "", "lsId": "", "subCode": "",
         "lat": lat, "lon": lon,
     }
-    try:
-        resp = requests.get(API_URL, headers=headers,
-                            params=params, timeout=15)
-        if resp.status_code == 200:
-            return resp.json()
-        print(f"  HTTP {resp.status_code}")
-    except requests.RequestException as e:
-        print(f"  Request failed: {e}")
+
+    for attempt in range(MAX_ATTEMPTS):
+        headers = {
+            **BROWSER_PROFILES[attempt % len(BROWSER_PROFILES)],
+            "Referer": (
+                f"https://in.bookmyshow.com/movies/"
+                f"{region_slug}/buytickets/{event_code}/"
+            ),
+            "x-region-code": region_code,
+            "x-region-slug": region_slug,
+            "x-geohash": geohash,
+            "x-latitude": lat,
+            "x-longitude": lon,
+        }
+        reason = None
+        try:
+            resp = session.get(API_URL, headers=headers,
+                               params=params, timeout=15)
+            if resp.status_code == 200:
+                try:
+                    return resp.json()
+                except ValueError:
+                    reason = "response was not JSON"
+            else:
+                reason = f"HTTP {resp.status_code}"
+                if resp.status_code not in RETRYABLE_STATUS:
+                    print(f"  {reason}")
+                    return None
+        except requests.RequestException as e:
+            reason = f"Request failed: {e}"
+
+        last_attempt = attempt == MAX_ATTEMPTS - 1
+        out_of_time = time.monotonic() - RUN_STARTED > RETRY_BUDGET_SECONDS
+        if last_attempt or out_of_time:
+            print(f"  {reason}")
+            return None
+        print(f"  {reason} — retrying ({attempt + 2}/{MAX_ATTEMPTS})")
+        time.sleep(RETRY_DELAYS[attempt])
     return None
 
 
@@ -378,6 +454,8 @@ def merge_state(old_state, fetched_state):
             **old_state.get("dates", {}),
             **fetched_state.get("dates", {}),
         },
+        # A run that reached BookMyShow resets the "everything failed" counter.
+        "fail_streak": 0,
     }
 
 
@@ -621,6 +699,13 @@ def send_email(subject, changes, shows, movie_info):
         print(f"  ❌ Email failed: {e}")
 
 
+def send_notice(subject, message):
+    """Plain status message (not a showtime alert) on every configured channel."""
+    info = {"name": "BMS Ticket Checker"}
+    send_telegram(subject, [message], [], info)
+    send_email(subject, [message], [], info)
+
+
 # ──────────────────────────────────────────────────────────────────────
 # MAIN
 # ──────────────────────────────────────────────────────────────────────
@@ -655,6 +740,10 @@ def main():
           f"Dates: {date_list}")
 
     # Fetch data for each date
+    old_state = load_state()
+    prev_streak = int(old_state.get("fail_streak", 0) or 0)
+    session = create_session()
+
     all_shows = []
     all_dates = []
     failed_dates = []
@@ -662,7 +751,8 @@ def main():
 
     for dc in date_list:
         data = fetch_bms(event_code, dc, region_code,
-                         region_slug_r, lat, lon, geohash)
+                         region_slug_r, lat, lon, geohash,
+                         session=session)
         if not data:
             print(f"  ⚠️  No data for date {dc or '(default)'}")
             failed_dates.append(dc)
@@ -679,8 +769,36 @@ def main():
               f"this run: {', '.join(d or '(default)' for d in failed_dates)}"
               " (their previous state is kept)")
 
+    # Every date failed: BookMyShow is refusing this runner. Count the runs
+    # in a row, warn once, and keep the saved state untouched. Exit 0 on
+    # purpose so the workflow still commits the counter.
+    if len(failed_dates) == len(date_list):
+        streak = prev_streak + 1
+        print(f"  ❌ Every date failed ({streak} run(s) in a row). "
+              "BookMyShow is refusing requests from this runner.")
+        save_state({**old_state, "fail_streak": streak})
+        if streak == BLOCK_ALERT_AFTER:
+            send_notice(
+                "BMS Alert: requests are being blocked",
+                f"BookMyShow has refused every request for {streak} runs in "
+                "a row. No alerts can be sent until it recovers. A quiet "
+                "log does NOT mean nothing changed.",
+            )
+        sys.exit(0)
+
+    # Reached BookMyShow again after a blocked stretch.
+    if prev_streak >= BLOCK_ALERT_AFTER:
+        send_notice(
+            "BMS Alert: requests are working again",
+            f"BookMyShow is answering again after {prev_streak} blocked "
+            "runs in a row. Shows added during the gap will show up below "
+            "as NEW.",
+        )
+
     if not all_shows:
         print("  ❌ No showtimes found.")
+        if prev_streak:
+            save_state({**old_state, "fail_streak": 0})
         sys.exit(0)
 
     print(f"  🎬 {movie_info['name']}  {movie_info['language']}")
@@ -695,12 +813,14 @@ def main():
     )
     print(f"  📊 {len(filtered)} showtime(s) after filters")
 
-    # Build state & detect changes
-    old_state = load_state()
+    # Build state & detect changes. A state holding only a fail counter has
+    # no baseline yet, so it must not make the next run report every show
+    # as NEW.
+    has_baseline = bool(old_state.get("shows") or old_state.get("dates"))
     new_state = merge_state(old_state, build_state(filtered, all_dates))
 
     changes = []
-    if old_state:
+    if has_baseline:
         changes = detect_changes(old_state, new_state)
 
     save_state(new_state)
