@@ -1,1 +1,207 @@
-{}
+{
+  "shows": {
+    "PRHN|258786|20261114|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261114",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "2"
+    },
+    "PRHN|258816|20261114| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:45 AM",
+      "date": "20261114",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "2"
+    },
+    "PRHN|258791|20261114|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "03:40 PM",
+      "date": "20261114",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "1"
+    },
+    "PRHN|258818|20261114| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "07:10 PM",
+      "date": "20261114",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "2"
+    },
+    "PRHN|258792|20261114|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:20 PM",
+      "date": "20261114",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "2"
+    },
+    "ALUC|6916|20261114|3D PLATINUM": {
+      "venue": "ALLU Cinemas: Kokapet",
+      "time": "07:45 PM",
+      "date": "20261114",
+      "cat": "3D PLATINUM",
+      "price": "390.00",
+      "status": "0"
+    },
+    "ALUC|6916|20261114|3D GOLD": {
+      "venue": "ALLU Cinemas: Kokapet",
+      "time": "07:45 PM",
+      "date": "20261114",
+      "cat": "3D GOLD",
+      "price": "335.00",
+      "status": "1"
+    },
+    "PRHN|258787|20261115|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261115",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "2"
+    },
+    "PRHN|258821|20261115| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:45 AM",
+      "date": "20261115",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "2"
+    },
+    "PRHN|258812|20261115|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "03:40 PM",
+      "date": "20261115",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "1"
+    },
+    "PRHN|258823|20261115| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "07:10 PM",
+      "date": "20261115",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "2"
+    },
+    "PRHN|258814|20261115|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:20 PM",
+      "date": "20261115",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "ALUC|6931|20261115|3D PLATINUM": {
+      "venue": "ALLU Cinemas: Kokapet",
+      "time": "07:45 PM",
+      "date": "20261115",
+      "cat": "3D PLATINUM",
+      "price": "390.00",
+      "status": "0"
+    },
+    "ALUC|6931|20261115|3D GOLD": {
+      "venue": "ALLU Cinemas: Kokapet",
+      "time": "07:45 PM",
+      "date": "20261115",
+      "cat": "3D GOLD",
+      "price": "335.00",
+      "status": "2"
+    },
+    "PRHN|258839|20261116|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261116",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258918|20261116| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "12:10 PM",
+      "date": "20261116",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "3"
+    },
+    "PRHN|258841|20261116|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "03:40 PM",
+      "date": "20261116",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258920|20261116| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "07:30 PM",
+      "date": "20261116",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "3"
+    },
+    "PRHN|258843|20261116|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:20 PM",
+      "date": "20261116",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258844|20261117|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261117",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258923|20261117| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "12:10 PM",
+      "date": "20261117",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "3"
+    },
+    "PRHN|258846|20261117|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "03:40 PM",
+      "date": "20261117",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    },
+    "PRHN|258925|20261117| EXECUTIVE + 3D Glass": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "07:30 PM",
+      "date": "20261117",
+      "cat": " EXECUTIVE + 3D Glass",
+      "price": "325.00",
+      "status": "3"
+    },
+    "PRHN|258848|20261117|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:20 PM",
+      "date": "20261117",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3"
+    }
+  },
+  "dates": {
+    "20261112": "AVAILABLE",
+    "20261113": "AVAILABLE",
+    "20261114": "AVAILABLE",
+    "20261115": "AVAILABLE",
+    "20261116": "AVAILABLE",
+    "20261117": "BOOKABLE",
+    "20261118": "AVAILABLE",
+    "20261119": "AVAILABLE"
+  },
+  "fail_streak": 0
+}
