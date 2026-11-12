@@ -145,19 +145,11 @@ API_URL = (
     "showtimes-by-event/primary-dynamic"
 )
 
+# Three distinct TLS + header profiles:
+# 0: macOS Chrome 120 (succeeded on your last run!)
+# 1: macOS Safari 17.0 (WebKit TLS stack, no sec-ch-ua headers)
+# 2: Windows Chrome 124
 BROWSER_PROFILES = [
-    {
-        "impersonate": "chrome124",
-        "headers": {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/124.0.0.0 Safari/537.36"
-            ),
-            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-            "sec-ch-ua-platform": '"Windows"',
-        },
-    },
     {
         "impersonate": "chrome120",
         "headers": {
@@ -167,13 +159,38 @@ BROWSER_PROFILES = [
                 "Chrome/120.0.0.0 Safari/537.36"
             ),
             "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": '"macOS"',
+        },
+    },
+    {
+        "impersonate": "safari17_0",
+        "headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                "Version/17.0 Safari/605.1.15"
+            ),
+        },
+    },
+    {
+        "impersonate": "chrome124",
+        "headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
         },
     },
 ]
 
 MAX_ATTEMPTS = 3
-RETRY_DELAYS = (1.5, 3.0)
+RETRY_DELAYS = (2.5, 4.5)
+INTER_DATE_DELAY = 2.0        # pause between dates so we don't trip burst limits
 RETRY_BUDGET_SECONDS = 120
 RETRYABLE_STATUS = {403, 429, 500, 502, 503, 504}
 BLOCK_ALERT_AFTER = 3
@@ -195,7 +212,6 @@ def create_session(profile_idx=0):
     s.headers.update({
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
-        "sec-ch-ua-mobile": "?0",
         "x-app-code": "WEB",
         "x-location-selection": "manual",
         "x-lsid": "",
@@ -205,8 +221,11 @@ def create_session(profile_idx=0):
 
 
 def fetch_bms(event_code, date_code, region_code, region_slug,
-              lat, lon, geohash, session=None):
-    session = session or create_session(0)
+              lat, lon, geohash, session=None, start_profile=0):
+    """Returns (data_dict_or_None, working_session, working_profile_idx)."""
+    active_session = session or create_session(start_profile)
+    active_profile = start_profile
+
     params = {
         "eventCode": event_code,
         "dateCode": date_code or "",
@@ -218,9 +237,10 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
     }
 
     for attempt in range(MAX_ATTEMPTS):
-        # On retry, spin up a fresh session with the alternate profile so
-        # cookies and User-Agent never mismatch.
-        active_session = session if attempt == 0 else create_session(attempt)
+        if attempt > 0:
+            active_profile = (start_profile + attempt) % len(BROWSER_PROFILES)
+            active_session = create_session(active_profile)
+
         headers = {
             "Referer": (
                 f"https://in.bookmyshow.com/movies/"
@@ -239,14 +259,15 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
             )
             if resp.status_code == 200:
                 try:
-                    return resp.json()
+                    # Keep this working session and profile for the next dates!
+                    return resp.json(), active_session, active_profile
                 except ValueError:
                     reason = "response was not JSON"
             else:
                 reason = f"HTTP {resp.status_code}"
                 if resp.status_code not in RETRYABLE_STATUS:
                     print(f"  {reason}")
-                    return None
+                    return None, active_session, active_profile
         except Exception as e:
             reason = f"Request failed: {e}"
 
@@ -254,10 +275,10 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
         out_of_time = time.monotonic() - RUN_STARTED > RETRY_BUDGET_SECONDS
         if last_attempt or out_of_time:
             print(f"  {reason}")
-            return None
+            return None, active_session, active_profile
         print(f"  {reason} — retrying ({attempt + 2}/{MAX_ATTEMPTS})")
         time.sleep(RETRY_DELAYS[attempt])
-    return None
+    return None, active_session, active_profile
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -684,7 +705,7 @@ def send_notice(subject, message):
 # ──────────────────────────────────────────────────────────────────────
 def main():
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    engine = "curl_cffi (Chrome TLS)" if HAS_CFFI else "requests (standard)"
+    engine = "curl_cffi (Browser TLS)" if HAS_CFFI else "requests (standard)"
     print(f"[{now_str}] BMS Ticket Checker — CI mode [{engine}]")
 
     parsed = parse_bms_url(CONFIG["url"])
@@ -713,45 +734,31 @@ def main():
 
     old_state = load_state()
     prev_streak = int(old_state.get("fail_streak", 0) or 0)
-    session = create_session(0)
+
+    current_profile = 0
+    session = create_session(current_profile)
 
     all_shows = []
     all_dates = []
     failed_dates = []
+    open_dates_on_bms = set()
     movie_info = {"name": "Unknown", "language": ""}
 
-    # Step 1: Initial discovery fetch with empty dateCode (just like the NCR repo).
-    # This sets session cookies and tells us which dates are actually open on BMS.
-    open_dates_on_bms = set()
-    already_fetched_dates = set()
-
-    init_data = fetch_bms(event_code, "", region_code, region_slug_r,
-                          lat, lon, geohash, session=session)
-    if init_data:
-        movie_info = parse_movie_info(init_data)
-        init_dates = parse_dates(init_data)
-        all_dates.extend(init_dates)
-        for d in init_dates:
-            if d.status in ("BOOKABLE", "AVAILABLE"):
-                open_dates_on_bms.add(d.date_code)
-            if d.status == "BOOKABLE" and d.date_code:
-                already_fetched_dates.add(d.date_code)
-        all_shows.extend(parse_shows(init_data))
-
-    # Step 2: Fetch each target date
-    for dc in date_list:
-        if not dc or dc in already_fetched_dates:
-            continue
-
-        # If discovery succeeded and BMS says this date isn't open/listed yet,
-        # skip hitting the API for it so we don't trigger unnecessary 403s.
-        if open_dates_on_bms and dc not in open_dates_on_bms:
+    for i, dc in enumerate(date_list):
+        # Once any earlier date succeeds, we know which dates are open in BMS's strip
+        if open_dates_on_bms and dc and dc not in open_dates_on_bms:
             print(f"  ⏳ Date {dc} is not open on BMS yet — skipping fetch")
             continue
 
-        data = fetch_bms(event_code, dc, region_code,
-                         region_slug_r, lat, lon, geohash,
-                         session=session)
+        if i > 0:
+            time.sleep(INTER_DATE_DELAY)
+
+        data, session, current_profile = fetch_bms(
+            event_code, dc, region_code, region_slug_r,
+            lat, lon, geohash,
+            session=session,
+            start_profile=current_profile,
+        )
         if not data:
             print(f"  ⚠️  No data for date {dc or '(default)'}")
             failed_dates.append(dc)
@@ -760,17 +767,22 @@ def main():
         if movie_info["name"] == "Unknown":
             movie_info = parse_movie_info(data)
 
-        all_dates.extend(parse_dates(data))
+        fetched_dates = parse_dates(data)
+        all_dates.extend(fetched_dates)
+        for d in fetched_dates:
+            if d.status in ("BOOKABLE", "AVAILABLE"):
+                open_dates_on_bms.add(d.date_code)
+
         all_shows.extend(parse_shows(data))
 
     if failed_dates:
-        print(f"  ⚠️  {len(failed_dates)} date(s) failed "
+        print(f"  ⚠️  {len(failed_dates)} of {len(date_list)} date(s) failed "
               f"this run: {', '.join(d or '(default)' for d in failed_dates)}"
               " (their previous state is kept)")
 
-    if not init_data and len(failed_dates) == len(date_list):
+    if len(failed_dates) == len(date_list):
         streak = prev_streak + 1
-        print(f"  ❌ Every request failed ({streak} run(s) in a row). "
+        print(f"  ❌ Every date failed ({streak} run(s) in a row). "
               "BookMyShow is refusing requests from this runner.")
         save_state({**old_state, "fail_streak": streak})
         if streak == BLOCK_ALERT_AFTER:
