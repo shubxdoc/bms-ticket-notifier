@@ -2,21 +2,6 @@
 BMS Ticket Checker — CI/Headless mode for GitHub Actions.
 Runs once, checks all configured watches, notifies on changes.
 State is persisted via a JSON file committed back to the repo.
-
-Changes vs. upstream:
-  * merge_state: a date that fails to load (HTTP 403) keeps its old state,
-    so it no longer causes false "NEW" alerts on the next run.
-  * Telegram notifications (in addition to the optional Resend email).
-  * Duplicate shows (BMS falls back to the first open date for dates that
-    have not opened yet) are removed before filtering and reporting.
-  * One requests.Session per run (cookies + connection reuse), and each
-    date is retried up to 3 times with a short pause and an alternate,
-    internally consistent browser profile when BookMyShow answers 403.
-  * If EVERY date fails on 3 runs in a row, you get a "requests are being
-    blocked" notice (and a "working again" notice afterwards), so a quiet
-    log can no longer hide a total block.
-
-Configure via environment variables or edit the CONFIG below.
 """
 
 import os
@@ -28,6 +13,14 @@ from html import escape
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
+
+try:
+    from curl_cffi import requests as cffi_requests
+    HAS_CFFI = True
+except ImportError:
+    cffi_requests = None
+    HAS_CFFI = False
+
 import requests
 
 # ──────────────────────────────────────────────────────────────────────
@@ -49,6 +42,7 @@ RESEND_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "aviiciii@resend.dev")
 
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+PROXY_URL = os.getenv("PROXY_URL", "").strip()
 
 STATE_FILE = "bms_state.json"
 
@@ -140,58 +134,64 @@ def resolve_region(slug):
     key = (slug or "").lower().strip()
     if key in REGION_MAP:
         return REGION_MAP[key]
-    return (key.upper()[:6], key, "0", "0", "")
+    return (key.upper()[:6], key, "17.385", "78.487", "tep")
 
 
 # ──────────────────────────────────────────────────────────────────────
-# BMS API
+# BMS API & SESSION MANAGEMENT
 # ──────────────────────────────────────────────────────────────────────
 API_URL = (
     "https://in.bookmyshow.com/api/movies-data/v4/"
     "showtimes-by-event/primary-dynamic"
 )
 
-
-# Two internally consistent browser profiles. The User-Agent and the
-# client-hint headers must agree with each other, otherwise the mismatch
-# itself looks like a bot. Attempt 1 uses the first profile, attempt 2 the
-# second, attempt 3 the first again.
 BROWSER_PROFILES = [
     {
-        "User-Agent": (
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/145.0.0.0 Safari/537.36"
-        ),
-        "sec-ch-ua": '"Chromium";v="145", "Not:A-Brand";v="99"',
-        "sec-ch-ua-platform": '"macOS"',
+        "impersonate": "chrome124",
+        "headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-platform": '"Windows"',
+        },
     },
     {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/124.0.0.0 Safari/537.36"
-        ),
-        "sec-ch-ua": ('"Chromium";v="124", "Google Chrome";v="124", '
-                      '"Not-A.Brand";v="99"'),
-        "sec-ch-ua-platform": '"Windows"',
+        "impersonate": "chrome120",
+        "headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            "sec-ch-ua-platform": '"macOS"',
+        },
     },
 ]
 
-MAX_ATTEMPTS = 3              # tries per date
-RETRY_DELAYS = (1.5, 3.0)     # seconds to wait before try 2 and try 3
-RETRY_BUDGET_SECONDS = 120    # stop retrying once the run has used this long
+MAX_ATTEMPTS = 3
+RETRY_DELAYS = (1.5, 3.0)
+RETRY_BUDGET_SECONDS = 120
 RETRYABLE_STATUS = {403, 429, 500, 502, 503, 504}
-BLOCK_ALERT_AFTER = 3         # runs in a row where EVERY date failed
+BLOCK_ALERT_AFTER = 3
 
 RUN_STARTED = time.monotonic()
 
 
-def create_session():
-    """One Session per run. It keeps the cookies BookMyShow sets and reuses
-    the connection, the way a browser does, instead of presenting every
-    request as a brand-new anonymous client."""
-    s = requests.Session()
+def create_session(profile_idx=0):
+    """Create a browser-impersonating session (curl_cffi if available, else requests)."""
+    profile = BROWSER_PROFILES[profile_idx % len(BROWSER_PROFILES)]
+    if HAS_CFFI:
+        s = cffi_requests.Session(impersonate=profile["impersonate"])
+    else:
+        s = requests.Session()
+
+    if PROXY_URL:
+        s.proxies = {"http": PROXY_URL, "https": PROXY_URL}
+
     s.headers.update({
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
@@ -199,24 +199,14 @@ def create_session():
         "x-app-code": "WEB",
         "x-location-selection": "manual",
         "x-lsid": "",
-        **BROWSER_PROFILES[0],
+        **profile["headers"],
     })
-    # Warm-up visit so BookMyShow can set its cookies. Failure is harmless.
-    try:
-        s.get(
-            "https://in.bookmyshow.com/",
-            headers={"Accept": "text/html,application/xhtml+xml,"
-                               "application/xml;q=0.9,*/*;q=0.8"},
-            timeout=15,
-        )
-    except requests.RequestException:
-        pass
     return s
 
 
 def fetch_bms(event_code, date_code, region_code, region_slug,
               lat, lon, geohash, session=None):
-    session = session or requests.Session()
+    session = session or create_session(0)
     params = {
         "eventCode": event_code,
         "dateCode": date_code or "",
@@ -228,8 +218,10 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
     }
 
     for attempt in range(MAX_ATTEMPTS):
+        # On retry, spin up a fresh session with the alternate profile so
+        # cookies and User-Agent never mismatch.
+        active_session = session if attempt == 0 else create_session(attempt)
         headers = {
-            **BROWSER_PROFILES[attempt % len(BROWSER_PROFILES)],
             "Referer": (
                 f"https://in.bookmyshow.com/movies/"
                 f"{region_slug}/buytickets/{event_code}/"
@@ -242,8 +234,9 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
         }
         reason = None
         try:
-            resp = session.get(API_URL, headers=headers,
-                               params=params, timeout=15)
+            resp = active_session.get(
+                API_URL, headers=headers, params=params, timeout=15
+            )
             if resp.status_code == 200:
                 try:
                     return resp.json()
@@ -254,7 +247,7 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
                 if resp.status_code not in RETRYABLE_STATUS:
                     print(f"  {reason}")
                     return None
-        except requests.RequestException as e:
+        except Exception as e:
             reason = f"Request failed: {e}"
 
         last_attempt = attempt == MAX_ATTEMPTS - 1
@@ -351,8 +344,6 @@ def parse_shows(data):
 
 
 def dedupe_shows(shows):
-    """BMS returns the first open date's shows for any date that has not
-    opened yet, so the same show can be collected several times."""
     unique = {}
     for s in shows:
         unique[(s.venue_code, s.session_id, s.date_code, s.time)] = s
@@ -372,17 +363,14 @@ def filter_shows(shows, theatre_filter, time_periods, date_codes):
                     if d.strip()) if date_codes else set()
 
     for s in shows:
-        # Theatre filter
         if kws:
             name_lower = s.venue_name.lower()
             if not any(k in name_lower for k in kws):
                 continue
 
-        # Date filter
         if dates_set and s.date_code and s.date_code not in dates_set:
             continue
 
-        # Time period filter
         if periods:
             try:
                 tc = int(s.time_code)
@@ -419,7 +407,6 @@ def save_state(state):
 
 
 def build_state(shows, dates):
-    """Build a comparable state dict."""
     show_state = {}
     for s in shows:
         for c in s.categories:
@@ -441,10 +428,6 @@ def build_state(shows, dates):
 
 
 def merge_state(old_state, fetched_state):
-    """Keep previously saved entries that are missing from this run's
-    response (e.g. a date that returned HTTP 403), and overwrite entries
-    that were fetched. Without this, a failed date is forgotten and then
-    reported as NEW the next time it loads."""
     return {
         "shows": {
             **old_state.get("shows", {}),
@@ -454,7 +437,6 @@ def merge_state(old_state, fetched_state):
             **old_state.get("dates", {}),
             **fetched_state.get("dates", {}),
         },
-        # A run that reached BookMyShow resets the "everything failed" counter.
         "fail_streak": 0,
     }
 
@@ -462,7 +444,6 @@ def merge_state(old_state, fetched_state):
 def detect_changes(old_state, new_state):
     changes = []
 
-    # New dates opening
     old_dates = old_state.get("dates", {})
     new_dates = new_state.get("dates", {})
     for dc, status in new_dates.items():
@@ -474,7 +455,6 @@ def detect_changes(old_state, new_state):
     old_shows = old_state.get("shows", {})
     new_shows = new_state.get("shows", {})
 
-    # New showtimes
     for key in sorted(set(new_shows) - set(old_shows)):
         s = new_shows[key]
         changes.append(
@@ -482,7 +462,6 @@ def detect_changes(old_state, new_state):
             f"— {s['cat']} ₹{s['price']}"
         )
 
-    # Sold out → available
     for key, new_s in new_shows.items():
         old_s = old_shows.get(key)
         if old_s and old_s["status"] == "0" and new_s["status"] != "0":
@@ -508,7 +487,6 @@ def _pretty_date(date_code):
 
 
 def _time_key(t):
-    """Sort '07:45 AM' / '03:25 PM' chronologically instead of as text."""
     try:
         return datetime.strptime(t.strip(), "%I:%M %p")
     except ValueError:
@@ -527,7 +505,6 @@ def send_telegram(subject, changes, shows, movie_info):
     lines = [f"🎬 {subject}", now_str, "", "Changes:"]
     lines.extend(changes)
 
-    # Compact list of current shows: venue + date -> times
     grouped = {}
     for s in shows:
         grouped.setdefault((s.venue_name, s.date_code), set()).add(s.time)
@@ -540,7 +517,7 @@ def send_telegram(subject, changes, shows, movie_info):
 
     lines.extend(["", f"Book: {CONFIG['url']}"])
     text = "\n".join(lines)
-    if len(text) > 4000:  # Telegram limit is 4096 characters
+    if len(text) > 4000:
         text = text[:3990] + "\n…"
 
     try:
@@ -580,7 +557,6 @@ def send_email(subject, changes, shows, movie_info):
     now_str = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
     movie_name = movie_info.get("name", "Movie")
 
-    # Build changes HTML
     changes_html = ""
     if changes:
         rows = "".join(
@@ -595,7 +571,6 @@ def send_email(subject, changes, shows, movie_info):
             {rows}
         </ul>"""
 
-    # Build shows section grouped by venue
     venue_groups = {}
     for s in shows:
         venue_groups.setdefault(s.venue_name, []).append(s)
@@ -657,7 +632,6 @@ def send_email(subject, changes, shows, movie_info):
 </body>
 </html>"""
 
-    # Build plain-text version with full show details
     plain_lines = [subject, "", f"Checked at: {now_str}", ""]
     if changes:
         plain_lines.append("Changes Detected:")
@@ -700,7 +674,6 @@ def send_email(subject, changes, shows, movie_info):
 
 
 def send_notice(subject, message):
-    """Plain status message (not a showtime alert) on every configured channel."""
     info = {"name": "BMS Ticket Checker"}
     send_telegram(subject, [message], [], info)
     send_email(subject, [message], [], info)
@@ -711,9 +684,9 @@ def send_notice(subject, message):
 # ──────────────────────────────────────────────────────────────────────
 def main():
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{now_str}] BMS Ticket Checker — CI mode")
+    engine = "curl_cffi (Chrome TLS)" if HAS_CFFI else "requests (standard)"
+    print(f"[{now_str}] BMS Ticket Checker — CI mode [{engine}]")
 
-    # Parse config
     parsed = parse_bms_url(CONFIG["url"])
     event_code = parsed["event_code"]
     region_slug = parsed["region_slug"]
@@ -727,7 +700,6 @@ def main():
         region_slug
     )
 
-    # Determine dates to check
     raw_dates = CONFIG["dates"].strip()
     if raw_dates:
         date_list = [d.strip() for d in raw_dates.split(",") if d.strip()]
@@ -739,17 +711,44 @@ def main():
     print(f"  Event: {event_code}  Region: {region_code}  "
           f"Dates: {date_list}")
 
-    # Fetch data for each date
     old_state = load_state()
     prev_streak = int(old_state.get("fail_streak", 0) or 0)
-    session = create_session()
+    session = create_session(0)
 
     all_shows = []
     all_dates = []
     failed_dates = []
     movie_info = {"name": "Unknown", "language": ""}
 
+    # Step 1: Initial discovery fetch with empty dateCode (just like the NCR repo).
+    # This sets session cookies and tells us which dates are actually open on BMS.
+    open_dates_on_bms = set()
+    already_fetched_dates = set()
+
+    init_data = fetch_bms(event_code, "", region_code, region_slug_r,
+                          lat, lon, geohash, session=session)
+    if init_data:
+        movie_info = parse_movie_info(init_data)
+        init_dates = parse_dates(init_data)
+        all_dates.extend(init_dates)
+        for d in init_dates:
+            if d.status in ("BOOKABLE", "AVAILABLE"):
+                open_dates_on_bms.add(d.date_code)
+            if d.status == "BOOKABLE" and d.date_code:
+                already_fetched_dates.add(d.date_code)
+        all_shows.extend(parse_shows(init_data))
+
+    # Step 2: Fetch each target date
     for dc in date_list:
+        if not dc or dc in already_fetched_dates:
+            continue
+
+        # If discovery succeeded and BMS says this date isn't open/listed yet,
+        # skip hitting the API for it so we don't trigger unnecessary 403s.
+        if open_dates_on_bms and dc not in open_dates_on_bms:
+            print(f"  ⏳ Date {dc} is not open on BMS yet — skipping fetch")
+            continue
+
         data = fetch_bms(event_code, dc, region_code,
                          region_slug_r, lat, lon, geohash,
                          session=session)
@@ -765,16 +764,13 @@ def main():
         all_shows.extend(parse_shows(data))
 
     if failed_dates:
-        print(f"  ⚠️  {len(failed_dates)} of {len(date_list)} date(s) failed "
+        print(f"  ⚠️  {len(failed_dates)} date(s) failed "
               f"this run: {', '.join(d or '(default)' for d in failed_dates)}"
               " (their previous state is kept)")
 
-    # Every date failed: BookMyShow is refusing this runner. Count the runs
-    # in a row, warn once, and keep the saved state untouched. Exit 0 on
-    # purpose so the workflow still commits the counter.
-    if len(failed_dates) == len(date_list):
+    if not init_data and len(failed_dates) == len(date_list):
         streak = prev_streak + 1
-        print(f"  ❌ Every date failed ({streak} run(s) in a row). "
+        print(f"  ❌ Every request failed ({streak} run(s) in a row). "
               "BookMyShow is refusing requests from this runner.")
         save_state({**old_state, "fail_streak": streak})
         if streak == BLOCK_ALERT_AFTER:
@@ -786,7 +782,6 @@ def main():
             )
         sys.exit(0)
 
-    # Reached BookMyShow again after a blocked stretch.
     if prev_streak >= BLOCK_ALERT_AFTER:
         send_notice(
             "BMS Alert: requests are working again",
@@ -803,7 +798,6 @@ def main():
 
     print(f"  🎬 {movie_info['name']}  {movie_info['language']}")
 
-    # Remove duplicate shows, then apply filters
     all_shows = dedupe_shows(all_shows)
     filtered = filter_shows(
         all_shows,
@@ -813,9 +807,6 @@ def main():
     )
     print(f"  📊 {len(filtered)} showtime(s) after filters")
 
-    # Build state & detect changes. A state holding only a fail counter has
-    # no baseline yet, so it must not make the next run report every show
-    # as NEW.
     has_baseline = bool(old_state.get("shows") or old_state.get("dates"))
     new_state = merge_state(old_state, build_state(filtered, all_dates))
 
@@ -835,7 +826,6 @@ def main():
     else:
         print("  ✅ No changes since last check.")
 
-    # Print current status
     print(f"\n  Current status ({len(filtered)} shows):")
     for s in filtered:
         cats = ", ".join(
