@@ -191,6 +191,54 @@
       "cat": "GOLD + 3D GlassL",
       "price": "400.00",
       "status": "3"
+    },
+    "PRHN|258828|20261114|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "04:45 PM",
+      "date": "20261114",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "2"
+    },
+    "ACAS|40112|20261114|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:00 PM",
+      "date": "20261114",
+      "cat": "SEMI RECLINERS",
+      "price": "350.00",
+      "status": "0"
+    },
+    "ACAS|40112|20261114|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:00 PM",
+      "date": "20261114",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3"
+    },
+    "PRHN|258876|20261115|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "04:45 PM",
+      "date": "20261115",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "2"
+    },
+    "ACAS|40135|20261115|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:00 PM",
+      "date": "20261115",
+      "cat": "SEMI RECLINERS",
+      "price": "350.00",
+      "status": "0"
+    },
+    "ACAS|40135|20261115|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:00 PM",
+      "date": "20261115",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3"
     }
   },
   "dates": {
