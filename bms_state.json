@@ -38,7 +38,7 @@
       "date": "20261114",
       "cat": "GOLD + 3D GlassL",
       "price": "400.00",
-      "status": "2"
+      "status": "1"
     },
     "ALUC|6916|20261114|3D PLATINUM": {
       "venue": "ALLU Cinemas: Kokapet",
@@ -94,7 +94,7 @@
       "date": "20261115",
       "cat": "GOLD + 3D GlassL",
       "price": "400.00",
-      "status": "3"
+      "status": "2"
     },
     "ALUC|6931|20261115|3D PLATINUM": {
       "venue": "ALLU Cinemas: Kokapet",
@@ -249,7 +249,8 @@
     "20261116": "AVAILABLE",
     "20261117": "BOOKABLE",
     "20261118": "AVAILABLE",
-    "20261119": "AVAILABLE"
+    "20261119": "AVAILABLE",
+    "20261120": "NOT_OPEN"
   },
   "fail_streak": 0
 }
