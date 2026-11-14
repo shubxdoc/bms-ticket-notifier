@@ -314,7 +314,8 @@
     "20261117": "BOOKABLE",
     "20261118": "AVAILABLE",
     "20261119": "AVAILABLE",
-    "20261120": "NOT_OPEN"
+    "20261120": "NOT_OPEN",
+    "20261121": "NOT_OPEN"
   },
   "fail_streak": 0
 }
