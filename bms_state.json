@@ -54,7 +54,7 @@
       "date": "20261114",
       "cat": "3D GOLD",
       "price": "335.00",
-      "status": "1"
+      "status": "0"
     },
     "PRHN|258787|20261115|GOLD + 3D GlassL": {
       "venue": "Prasads Multiplex: Hyderabad",
@@ -94,7 +94,7 @@
       "date": "20261115",
       "cat": "GOLD + 3D GlassL",
       "price": "400.00",
-      "status": "2"
+      "status": "3"
     },
     "ALUC|6931|20261115|3D PLATINUM": {
       "venue": "ALLU Cinemas: Kokapet",
@@ -198,7 +198,7 @@
       "date": "20261114",
       "cat": "EXECUTIVE",
       "price": "295.00",
-      "status": "2"
+      "status": "1"
     },
     "ACAS|40112|20261114|SEMI RECLINERS": {
       "venue": "AAA Cinemas: Ameerpet",
@@ -206,7 +206,7 @@
       "date": "20261114",
       "cat": "SEMI RECLINERS",
       "price": "350.00",
-      "status": "0"
+      "status": "2"
     },
     "ACAS|40112|20261114|GOLD": {
       "venue": "AAA Cinemas: Ameerpet",
@@ -222,11 +222,11 @@
       "date": "20261115",
       "cat": "EXECUTIVE",
       "price": "295.00",
-      "status": "2"
+      "status": "1"
     },
     "ACAS|40135|20261115|SEMI RECLINERS": {
       "venue": "AAA Cinemas: Ameerpet",
-      "time": "03:00 PM",
+      "time": "03:10 PM",
       "date": "20261115",
       "cat": "SEMI RECLINERS",
       "price": "350.00",
@@ -234,11 +234,27 @@
     },
     "ACAS|40135|20261115|GOLD": {
       "venue": "AAA Cinemas: Ameerpet",
-      "time": "03:00 PM",
+      "time": "03:10 PM",
       "date": "20261115",
       "cat": "GOLD",
       "price": "295.00",
       "status": "2"
+    },
+    "PRHN|258956|20261116|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "04:25 PM",
+      "date": "20261116",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3"
+    },
+    "PRHN|259002|20261117|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "04:25 PM",
+      "date": "20261117",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3"
     }
   },
   "dates": {
