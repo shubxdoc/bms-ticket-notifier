@@ -70,7 +70,7 @@
       "date": "20261115",
       "cat": " EXECUTIVE + 3D Glass",
       "price": "325.00",
-      "status": "2"
+      "status": "1"
     },
     "PRHN|258812|20261115|GOLD + 3D GlassL": {
       "venue": "Prasads Multiplex: Hyderabad",
@@ -86,7 +86,7 @@
       "date": "20261115",
       "cat": " EXECUTIVE + 3D Glass",
       "price": "325.00",
-      "status": "2"
+      "status": "1"
     },
     "PRHN|258814|20261115|GOLD + 3D GlassL": {
       "venue": "Prasads Multiplex: Hyderabad",
@@ -94,7 +94,7 @@
       "date": "20261115",
       "cat": "GOLD + 3D GlassL",
       "price": "400.00",
-      "status": "3"
+      "status": "2"
     },
     "ALUC|6931|20261115|3D PLATINUM": {
       "venue": "ALLU Cinemas: Kokapet",
@@ -253,6 +253,54 @@
       "time": "04:25 PM",
       "date": "20261117",
       "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3"
+    },
+    "ALUC|6965|20261116|3D PLATINUM": {
+      "venue": "ALLU Cinemas: Kokapet",
+      "time": "06:50 PM",
+      "date": "20261116",
+      "cat": "3D PLATINUM",
+      "price": "390.00",
+      "status": "0"
+    },
+    "ALUC|6965|20261116|3D GOLD": {
+      "venue": "ALLU Cinemas: Kokapet",
+      "time": "06:50 PM",
+      "date": "20261116",
+      "cat": "3D GOLD",
+      "price": "335.00",
+      "status": "3"
+    },
+    "ACAS|40177|20261116|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:55 PM",
+      "date": "20261116",
+      "cat": "SEMI RECLINERS",
+      "price": "350.00",
+      "status": "0"
+    },
+    "ACAS|40177|20261116|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:55 PM",
+      "date": "20261116",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3"
+    },
+    "ACAS|40203|20261117|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:55 PM",
+      "date": "20261117",
+      "cat": "SEMI RECLINERS",
+      "price": "350.00",
+      "status": "0"
+    },
+    "ACAS|40203|20261117|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "03:55 PM",
+      "date": "20261117",
+      "cat": "GOLD",
       "price": "295.00",
       "status": "3"
     }
