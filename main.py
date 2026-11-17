@@ -960,8 +960,10 @@ def main():
             movie_info["language"],
             format_specs,
         )
-        print(f"  🎯 Tracking {len(target_formats)} format(s): "
-              f"{', '.join(f'{f[\"display\"]} ({f[\"event_code\"]})' for f in target_formats)}")
+        fmt_summary = ", ".join(
+            f"{f['display']} ({f['event_code']})" for f in target_formats
+        )
+        print(f"  🎯 Tracking {len(target_formats)} format(s): {fmt_summary}")
 
         # Step 2: Fetch each matched format across the requested dates
         for tf in target_formats:
