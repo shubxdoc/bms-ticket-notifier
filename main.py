@@ -2,6 +2,16 @@
 BMS Ticket Checker — CI/Headless mode for GitHub Actions.
 Runs once, checks all configured watches, notifies on changes.
 State is persisted via a JSON file committed back to the repo.
+
+Features:
+  * Multi-movie support via comma-separated URLs in BMS_URL.
+  * Auto-format discovery per movie with URL #fragment filtering
+    (e.g. ...ET00493076#3d+2d or ...ET00493076#hindi 3d+hindi 2d).
+  * Theatre + Screen filtering in BMS_THEATRE (e.g. "ALLU,Prasads,AAA:LED").
+  * Notifications fire ONLY when discovered formats have active showtimes at
+    your filtered BMS_THEATRE venues.
+  * curl_cffi browser TLS impersonation (Safari 17 / Chrome) + session reuse.
+  * merge_state: failed fetches keep their previous state (no false NEW alerts).
 """
 
 import os
@@ -12,7 +22,7 @@ import time
 from html import escape
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass, field
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote
 
 try:
     from curl_cffi import requests as cffi_requests
@@ -29,10 +39,10 @@ import requests
 CONFIG = {
     "url": os.getenv(
         "BMS_URL",
-        "https://in.bookmyshow.com/movies/chennai/dhurandhar-the-revenge/buytickets/ET00478890"
+        "https://in.bookmyshow.com/movies/hyderabad/ramayana/buytickets/ET00493076#3d+2d"
     ),
     "dates": os.getenv("BMS_DATES", ""),          # comma-separated YYYYMMDD, empty = from URL
-    "theatre": os.getenv("BMS_THEATRE", ""),       # e.g. "ALLU,Prasads,AAA:LED" or "Prasads:PCX,AAA:LED"
+    "theatre": os.getenv("BMS_THEATRE", ""),       # e.g. "ALLU,Prasads,AAA:LED"
     "time_period": os.getenv("BMS_TIME", ""),      # e.g. "evening,night", empty = all
 }
 
@@ -76,6 +86,7 @@ REGION_MAP = {
     "mumbai":     ("MUMBAI", "mumbai",     "19.076", "72.878", "te7"),
     "delhi-ncr":  ("NCR",    "delhi-ncr",  "28.613", "77.209", "ttn"),
     "delhi":      ("NCR",    "delhi-ncr",  "28.613", "77.209", "ttn"),
+    "national-capital-region-ncr": ("NCR", "national-capital-region-ncr", "28.613", "77.209", "ttn"),
     "bengaluru":  ("BANG",   "bengaluru",  "12.972", "77.594", "tdr"),
     "bangalore":  ("BANG",   "bengaluru",  "12.972", "77.594", "tdr"),
     "hyderabad":  ("HYD",    "hyderabad",  "17.385", "78.487", "tep"),
@@ -86,7 +97,7 @@ REGION_MAP = {
 
 
 # ──────────────────────────────────────────────────────────────────────
-# DATA
+# DATA STRUCTURES
 # ──────────────────────────────────────────────────────────────────────
 @dataclass
 class CatInfo:
@@ -103,6 +114,7 @@ class ShowInfo:
     time: str
     time_code: str
     screen_attr: str
+    movie_name: str = ""
     lang_format: str = ""
     categories: list[CatInfo] = field(default_factory=list)
 
@@ -110,15 +122,40 @@ class ShowInfo:
 class DateInfo:
     date_code: str
     status: str
+    movie_key: str = ""
+    movie_name: str = ""
 
 
 # ──────────────────────────────────────────────────────────────────────
-# URL PARSER + REGION RESOLVER
+# URL PARSER (WITH #FORMAT FRAGMENT) + REGION RESOLVER
 # ──────────────────────────────────────────────────────────────────────
 def parse_bms_url(url):
-    path = urlparse(url.strip()).path.strip("/")
+    """
+    Parse BMS URL and optional #format fragment.
+    Example:
+      https://in.bookmyshow.com/movies/hyderabad/ramayana/buytickets/ET00493076#hindi 3d+2d
+      -> event_code='ET00493076', region_slug='hyderabad',
+         format_specs=['hindi 3d', '2d'], clean_url='https://...'
+    """
+    parsed = urlparse(url.strip())
+    path = parsed.path.strip("/")
     parts = path.split("/")
-    result = {"event_code": None, "date_code": None, "region_slug": None}
+    fragment = unquote(parsed.fragment or "").strip()
+
+    format_specs = [
+        s.strip().lower()
+        for s in re.split(r"[+|/;]+", fragment)
+        if s.strip()
+    ]
+
+    clean_url = parsed._replace(fragment="").geturl()
+    result = {
+        "event_code": None,
+        "date_code": None,
+        "region_slug": None,
+        "format_specs": format_specs,
+        "clean_url": clean_url,
+    }
     for p in parts:
         if re.match(r"^ET\d{8,}$", p, re.I):
             result["event_code"] = p.upper()
@@ -146,7 +183,6 @@ API_URL = (
     "showtimes-by-event/primary-dynamic"
 )
 
-# Profile 0 is now safari17_0 (WebKit TLS), which bypassed BMS's 403 immediately
 BROWSER_PROFILES = [
     {
         "impersonate": "safari17_0",
@@ -277,10 +313,14 @@ def fetch_bms(event_code, date_code, region_code, region_slug,
 
 
 # ──────────────────────────────────────────────────────────────────────
-# PARSERS
+# PARSERS & AUTO-FORMAT DISCOVERY
 # ──────────────────────────────────────────────────────────────────────
 def parse_movie_info(data):
     info = {"name": "Unknown Movie", "language": ""}
+    header_title = data.get("data", {}).get("header", {}).get("title", {})
+    if header_title.get("text"):
+        info["name"] = header_title["text"]
+
     for w in data.get("data", {}).get("topStickyWidgets", []):
         if w.get("type") == "horizontal-text-list":
             for item in w.get("data", []):
@@ -297,7 +337,83 @@ def parse_movie_info(data):
     return info
 
 
-def parse_dates(data):
+def extract_available_formats(data):
+    """
+    Extract all formats and languages linked to this movie from BMS's format-selector.
+    Returns list of dicts: {'language', 'format', 'event_code', 'display'}.
+    """
+    formats = []
+    seen = set()
+    fs = data.get("data", {}).get("bottomSheetData", {}).get("format-selector", {})
+    for w in fs.get("widgets", []):
+        if w.get("type") == "chip-list":
+            lang = w.get("text", "").strip()
+            for chip in w.get("data", []):
+                fmt_title = chip.get("title", "").strip()
+                addl = chip.get("cta", {}).get("additionalData", {})
+                ecode = (addl.get("eventCode") or addl.get("refEventCode") or "").upper()
+                if ecode and ecode not in seen:
+                    seen.add(ecode)
+                    display = f"{lang} • {fmt_title}".strip(" •")
+                    formats.append({
+                        "language": lang,
+                        "format": fmt_title,
+                        "event_code": ecode,
+                        "display": display,
+                    })
+    return formats
+
+
+def match_target_formats(available_formats, base_event_code, base_lang_fmt, format_specs):
+    """
+    Filter discovered formats using the URL's #fragment specs.
+    - Each spec in format_specs (e.g. 'hindi 3d' or '2d') is split into word tokens.
+    - A format matches a spec if every token in that spec appears as a word in
+      '<language> <format>' (so '3d' matches 'Hindi • 3D' and 'IMAX 3D', while
+      '2d' matches 'Hindi • 2D').
+    - If format_specs is empty (no #fragment in URL) or 'all', all discovered
+      formats for the movie are checked.
+    """
+    fallback = [{
+        "event_code": base_event_code,
+        "language": "",
+        "format": "",
+        "display": base_lang_fmt or "Default",
+    }]
+    if not available_formats:
+        return fallback
+
+    if not format_specs or "all" in format_specs:
+        return available_formats
+
+    matched = []
+    seen = set()
+    for spec in format_specs:
+        tokens = [t for t in re.split(r"[\s•,-]+", spec.lower()) if t]
+        if not tokens:
+            continue
+        for f in available_formats:
+            haystack_words = set(
+                re.split(r"[\s•,-]+", f"{f['language']} {f['format']}".lower())
+            )
+            haystack_str = f"{f['language']} {f['format']}".lower()
+            if all(tok in haystack_words or tok in haystack_str for tok in tokens):
+                if f["event_code"] not in seen:
+                    seen.add(f["event_code"])
+                    matched.append(f)
+
+    if not matched:
+        print(f"  ⚠️  No formats matched #{ '+'.join(format_specs) }; "
+              f"falling back to base event {base_event_code}")
+        for f in available_formats:
+            if f["event_code"] == base_event_code:
+                return [f]
+        return fallback
+
+    return matched
+
+
+def parse_dates(data, movie_key="", movie_name=""):
     dates = []
     for w in data.get("data", {}).get("topStickyWidgets", []):
         if w.get("type") != "horizontal-block-list":
@@ -309,11 +425,13 @@ def parse_dates(data):
                 dates.append(DateInfo(
                     date_code=item.get("id", ""),
                     status=DATE_STYLE_MAP.get(style, "UNKNOWN"),
+                    movie_key=movie_key,
+                    movie_name=movie_name,
                 ))
     return dates
 
 
-def parse_shows(data, lang_format=""):
+def parse_shows(data, movie_name="", lang_format=""):
     shows = []
     for w in data.get("data", {}).get("showtimeWidgets", []):
         if w.get("type") != "groupList":
@@ -340,7 +458,6 @@ def parse_shows(data, lang_format=""):
 
                     raw_screen = (st.get("screenAttr", "")
                                   or sa.get("attributes", ""))
-                    # If tracking both 2D and 3D, tag the format alongside screen_attr
                     if lang_format and raw_screen:
                         display_attr = f"{raw_screen} · {lang_format}"
                     elif lang_format:
@@ -354,8 +471,9 @@ def parse_shows(data, lang_format=""):
                         session_id=sa.get("sessionId", ""),
                         date_code=date_code,
                         time=st.get("title", ""),
-                        time_code=sa.get("showTimeCode", ""),
+                        time_code=str(sa.get("showTimeCode", "")),
                         screen_attr=display_attr,
+                        movie_name=movie_name,
                         lang_format=lang_format,
                     )
                     for cat in sa.get("categories", []):
@@ -474,11 +592,14 @@ def build_state(shows, dates):
                 "cat": c.name,
                 "price": c.price,
                 "status": c.status,
+                "movie": s.movie_name,
+                "screen": s.screen_attr,
             }
 
-    date_state = {
-        d.date_code: d.status for d in dates
-    }
+    date_state = {}
+    for d in dates:
+        d_key = f"{d.movie_key}|{d.date_code}" if d.movie_key else d.date_code
+        date_state[d_key] = d.status
 
     return {"shows": show_state, "dates": date_state}
 
@@ -497,26 +618,37 @@ def merge_state(old_state, fetched_state):
     }
 
 
+def _format_show_alert(prefix, s, suffix=""):
+    movie_lbl = f"[{s['movie']}] " if s.get("movie") else ""
+    screen_lbl = f" ({s['screen']})" if s.get("screen") else ""
+    return (
+        f"{prefix}: {movie_lbl}{s['venue']} {s['time']}{screen_lbl} "
+        f"[{s['date']}] — {s['cat']} ₹{s['price']}{suffix}"
+    )
+
+
 def detect_changes(old_state, new_state):
     changes = []
 
     old_dates = old_state.get("dates", {})
     new_dates = new_state.get("dates", {})
-    for dc, status in new_dates.items():
-        old_status = old_dates.get(dc)
+    for d_key, status in new_dates.items():
+        old_status = old_dates.get(d_key)
+        # Also check legacy un-prefixed date key for smooth transition
+        plain_dc = d_key.split("|")[-1]
+        if old_status is None and plain_dc in old_dates:
+            old_status = old_dates.get(plain_dc)
+
         if (old_status == "NOT_OPEN"
                 and status in ("BOOKABLE", "AVAILABLE")):
-            changes.append(f"📅 NEW DATE OPENED: {dc}")
+            changes.append(f"📅 NEW DATE OPENED: {plain_dc}")
 
     old_shows = old_state.get("shows", {})
     new_shows = new_state.get("shows", {})
 
     for key in sorted(set(new_shows) - set(old_shows)):
         s = new_shows[key]
-        changes.append(
-            f"🆕 NEW: {s['venue']} {s['time']} [{s['date']}] "
-            f"— {s['cat']} ₹{s['price']}"
-        )
+        changes.append(_format_show_alert("🆕 NEW", s))
 
     for key, new_s in new_shows.items():
         old_s = old_shows.get(key)
@@ -525,8 +657,7 @@ def detect_changes(old_state, new_state):
                 new_s["status"], ("UNKNOWN", "⚪")
             )
             changes.append(
-                f"{ico} BACK: {new_s['venue']} {new_s['time']} "
-                f"[{new_s['date']}] — {new_s['cat']} → {lbl}"
+                _format_show_alert(f"{ico} BACK", new_s, suffix=f" → {lbl}")
             )
 
     return changes
@@ -563,15 +694,22 @@ def send_telegram(subject, changes, shows, movie_info):
 
     grouped = {}
     for s in shows:
-        grouped.setdefault((s.venue_name, s.date_code), set()).add(s.time)
+        key = (s.movie_name, s.venue_name, s.date_code, s.screen_attr)
+        grouped.setdefault(key, set()).add(s.time)
     if grouped:
         lines.extend(["", "Current shows:"])
-        for (venue, dc), times in sorted(grouped.items(),
-                                         key=lambda kv: (kv[0][1], kv[0][0])):
-            lines.append(f"{venue} · {_pretty_date(dc)}: "
-                         f"{', '.join(sorted(times, key=_time_key))}")
+        for (mname, venue, dc, scr), times in sorted(
+            grouped.items(),
+            key=lambda kv: (kv[0][0], kv[0][2], kv[0][1], kv[0][3]),
+        ):
+            m_prefix = f"[{mname}] " if mname else ""
+            scr_lbl = f" ({scr})" if scr else ""
+            lines.append(
+                f"{m_prefix}{venue}{scr_lbl} · {_pretty_date(dc)}: "
+                f"{', '.join(sorted(times, key=_time_key))}"
+            )
 
-    first_url = CONFIG["url"].split(",")[0].strip()
+    first_url = parse_bms_url(CONFIG["url"].split(",")[0])["clean_url"]
     lines.extend(["", f"Book: {first_url}"])
     text = "\n".join(lines)
     if len(text) > 4000:
@@ -630,7 +768,8 @@ def send_email(subject, changes, shows, movie_info):
 
     venue_groups = {}
     for s in shows:
-        venue_groups.setdefault(s.venue_name, []).append(s)
+        header_label = f"{s.movie_name} — {s.venue_name}" if s.movie_name else s.venue_name
+        venue_groups.setdefault(header_label, []).append(s)
 
     shows_html = ""
     for vname, vshows in venue_groups.items():
@@ -758,17 +897,18 @@ def main():
 
     all_shows = []
     all_dates = []
+    tracked_movie_names = []
     total_requests = 0
     total_failed = 0
-    movie_info = {"name": "Unknown", "language": ""}
 
     for u_idx, url in enumerate(raw_urls):
         parsed = parse_bms_url(url)
-        event_code = parsed["event_code"]
+        base_event_code = parsed["event_code"]
         region_slug = parsed["region_slug"]
         url_date = parsed.get("date_code", "")
+        format_specs = parsed["format_specs"]
 
-        if not event_code or not region_slug:
+        if not base_event_code or not region_slug:
             print(f"  ❌ Skipping invalid URL: {url}")
             continue
 
@@ -781,54 +921,91 @@ def main():
         else:
             date_list = [""]
 
-        print(f"\n🔎 Event: {event_code}  Region: {region_code}  Dates: {date_list}")
+        spec_label = f"#{ '+'.join(format_specs) }" if format_specs else "(all formats)"
+        print(f"\n🔎 Base Event: {base_event_code} {spec_label}  "
+              f"Region: {region_code}  Dates: {date_list}")
 
-        open_dates_on_bms = set()
-        failed_for_url = []
-        url_movie_info = {"name": "Unknown", "language": ""}
+        # Step 1: Discover movie info and all available formats using the first date
+        first_dc = date_list[0]
+        if total_requests > 0:
+            time.sleep(INTER_DATE_DELAY)
+        total_requests += 1
 
-        for i, dc in enumerate(date_list):
-            if open_dates_on_bms and dc and dc not in open_dates_on_bms:
-                print(f"  ⏳ Date {dc} is not open on BMS yet — skipping fetch")
-                continue
+        init_data, session, current_profile = fetch_bms(
+            base_event_code, first_dc, region_code, region_slug_r,
+            lat, lon, geohash,
+            session=session,
+            start_profile=current_profile,
+        )
+        if not init_data:
+            print(f"  ⚠️  Initial discovery failed for {base_event_code}")
+            total_failed += 1
+            continue
 
-            if total_requests > 0:
-                time.sleep(INTER_DATE_DELAY)
-            total_requests += 1
+        movie_info = parse_movie_info(init_data)
+        m_name = movie_info["name"]
+        if m_name != "Unknown Movie" and m_name not in tracked_movie_names:
+            tracked_movie_names.append(m_name)
 
-            data, session, current_profile = fetch_bms(
-                event_code, dc, region_code, region_slug_r,
-                lat, lon, geohash,
-                session=session,
-                start_profile=current_profile,
-            )
-            if not data:
-                print(f"  ⚠️  No data for date {dc or '(default)'}")
-                failed_for_url.append(dc)
-                total_failed += 1
-                continue
+        available_formats = extract_available_formats(init_data)
+        if available_formats:
+            print(f"  🎥 {m_name} — Available formats on BMS: "
+                  f"{', '.join(f['display'] for f in available_formats)}")
+        else:
+            print(f"  🎥 {m_name}  {movie_info['language']}")
 
-            if url_movie_info["name"] == "Unknown":
-                url_movie_info = parse_movie_info(data)
-            if movie_info["name"] == "Unknown":
-                movie_info = url_movie_info
+        target_formats = match_target_formats(
+            available_formats,
+            base_event_code,
+            movie_info["language"],
+            format_specs,
+        )
+        print(f"  🎯 Tracking {len(target_formats)} format(s): "
+              f"{', '.join(f'{f[\"display\"]} ({f[\"event_code\"]})' for f in target_formats)}")
 
-            fetched_dates = parse_dates(data)
-            all_dates.extend(fetched_dates)
-            for d in fetched_dates:
-                if d.status in ("BOOKABLE", "AVAILABLE"):
-                    open_dates_on_bms.add(d.date_code)
+        # Step 2: Fetch each matched format across the requested dates
+        for tf in target_formats:
+            f_code = tf["event_code"]
+            f_display = tf["display"]
+            open_dates_for_fmt = set()
+            failed_for_fmt = []
 
-            lang_fmt = url_movie_info.get("language", "") if len(raw_urls) > 1 else ""
-            all_shows.extend(parse_shows(data, lang_format=lang_fmt))
+            for dc in date_list:
+                # Reuse the initial discovery response if it matches (f_code, first_dc)
+                if f_code == base_event_code and dc == first_dc:
+                    data = init_data
+                else:
+                    if open_dates_for_fmt and dc and dc not in open_dates_for_fmt:
+                        print(f"  ⏳ [{f_display}] Date {dc} is not open on BMS yet — skipping")
+                        continue
 
-        if url_movie_info["name"] != "Unknown":
-            print(f"  🎬 {url_movie_info['name']}  {url_movie_info['language']}")
+                    time.sleep(INTER_DATE_DELAY)
+                    total_requests += 1
+                    data, session, current_profile = fetch_bms(
+                        f_code, dc, region_code, region_slug_r,
+                        lat, lon, geohash,
+                        session=session,
+                        start_profile=current_profile,
+                    )
 
-        if failed_for_url:
-            print(f"  ⚠️  {len(failed_for_url)} of {len(date_list)} date(s) failed "
-                  f"for {event_code}: {', '.join(d or '(default)' for d in failed_for_url)}"
-                  " (their previous state is kept)")
+                if not data:
+                    print(f"  ⚠️  [{f_display}] No data for date {dc or '(default)'}")
+                    failed_for_fmt.append(dc)
+                    total_failed += 1
+                    continue
+
+                fetched_dates = parse_dates(data, movie_key=base_event_code, movie_name=m_name)
+                all_dates.extend(fetched_dates)
+                for d in fetched_dates:
+                    if d.status in ("BOOKABLE", "AVAILABLE"):
+                        open_dates_for_fmt.add(d.date_code)
+
+                all_shows.extend(parse_shows(data, movie_name=m_name, lang_format=f_display))
+
+            if failed_for_fmt:
+                print(f"  ⚠️  [{f_display}] {len(failed_for_fmt)} of {len(date_list)} date(s) "
+                      f"failed: {', '.join(d or '(default)' for d in failed_for_fmt)} "
+                      "(previous state kept)")
 
     if total_requests > 0 and total_failed == total_requests:
         streak = prev_streak + 1
@@ -858,6 +1035,8 @@ def main():
             save_state({**old_state, "fail_streak": 0})
         sys.exit(0)
 
+    # Deduplicate and strictly filter by BMS_THEATRE (including Theatre:Screen rules)
+    # BEFORE building state or detecting changes.
     all_shows = dedupe_shows(all_shows)
     filtered = filter_shows(
         all_shows,
@@ -865,10 +1044,17 @@ def main():
         CONFIG["time_period"],
         CONFIG["dates"],
     )
-    print(f"\n  📊 {len(filtered)} total showtime(s) after filters")
+    print(f"\n  📊 {len(filtered)} showtime(s) matched your BMS_THEATRE & time filters")
+
+    # Only report NEW DATE OPENED for dates that actually have shows at your filtered theatres
+    active_dates_at_theatres = {s.date_code for s in filtered}
+    filtered_dates = [
+        d for d in all_dates
+        if d.status == "NOT_OPEN" or d.date_code in active_dates_at_theatres
+    ]
 
     has_baseline = bool(old_state.get("shows") or old_state.get("dates"))
-    new_state = merge_state(old_state, build_state(filtered, all_dates))
+    new_state = merge_state(old_state, build_state(filtered, filtered_dates))
 
     changes = []
     if has_baseline:
@@ -876,13 +1062,16 @@ def main():
 
     save_state(new_state)
 
+    title_movies = ", ".join(tracked_movie_names) if tracked_movie_names else "Movies"
+    summary_info = {"name": title_movies}
+
     if changes:
         print(f"\n  ⚡ {len(changes)} change(s) detected:")
         for c in changes:
             print(f"     {c}")
-        subject = f"BMS Alert: {movie_info['name']} - {len(changes)} change(s)"
-        send_telegram(subject, changes, filtered, movie_info)
-        send_email(subject, changes, filtered, movie_info)
+        subject = f"BMS Alert: {title_movies} - {len(changes)} change(s)"
+        send_telegram(subject, changes, filtered, summary_info)
+        send_email(subject, changes, filtered, summary_info)
     else:
         print("  ✅ No changes since last check.")
 
@@ -893,7 +1082,8 @@ def main():
             for c in s.categories
         )
         fmt = f"|{s.screen_attr}" if s.screen_attr else ""
-        print(f"    {s.venue_name} — {s.time}{fmt} [{s.date_code}] — {cats}")
+        m_lbl = f"[{s.movie_name}] " if len(tracked_movie_names) > 1 else ""
+        print(f"    {m_lbl}{s.venue_name} — {s.time}{fmt} [{s.date_code}] — {cats}")
 
     print("\n  Done.")
 
