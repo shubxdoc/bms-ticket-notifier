@@ -349,7 +349,14 @@
     "20261120": "NOT_OPEN",
     "20261121": "NOT_OPEN",
     "20261122": "NOT_OPEN",
-    "20261123": "NOT_OPEN"
+    "20261123": "NOT_OPEN",
+    "20261217": "AVAILABLE",
+    "20261218": "AVAILABLE",
+    "20261219": "AVAILABLE",
+    "20261220": "BOOKABLE",
+    "20261221": "NOT_OPEN",
+    "20261222": "NOT_OPEN",
+    "20261223": "NOT_OPEN"
   },
   "fail_streak": 0
 }
