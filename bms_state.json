@@ -1,9 +1,104 @@
 {
-  "shows": {},
+  "shows": {
+    "PRHN|259124|20261120|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:10 PM",
+      "date": "20261120",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Ramayana",
+      "screen": "BARCO 4K SMART LASER \u00b7 Hindi \u2022 2D"
+    },
+    "PRHN|259011|20261120|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "03:30 PM",
+      "date": "20261120",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3",
+      "movie": "Ramayana",
+      "screen": "PCX Screen \u00b7 Hindi \u2022 3D"
+    },
+    "PRHN|259013|20261120|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:00 PM",
+      "date": "20261120",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3",
+      "movie": "Ramayana",
+      "screen": "PCX Screen \u00b7 Hindi \u2022 3D"
+    },
+    "PRHN|259109|20261120|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "01:55 PM",
+      "date": "20261120",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Ramayana",
+      "screen": "Telugu \u2022 2D"
+    },
+    "PRHN|259010|20261120|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:45 AM",
+      "date": "20261120",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3",
+      "movie": "Ramayana",
+      "screen": "PCX Screen \u00b7 Telugu \u2022 3D"
+    },
+    "PRHN|259012|20261120|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "07:15 PM",
+      "date": "20261120",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "3",
+      "movie": "Ramayana",
+      "screen": "PCX Screen \u00b7 Telugu \u2022 3D"
+    },
+    "PRHN|259019|20261120|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:20 AM",
+      "date": "20261120",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Godzilla Minus Zero",
+      "screen": "Japanese  \u2022  2D"
+    },
+    "PRHN|259020|20261120|EXECUTIVE": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "11:45 PM",
+      "date": "20261120",
+      "cat": "EXECUTIVE",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Godzilla Minus Zero",
+      "screen": "Japanese  \u2022  2D"
+    }
+  },
   "dates": {
     "ET00439706|20261221": "NOT_OPEN",
     "ET00439706|20261222": "NOT_OPEN",
-    "ET00439706|20261223": "NOT_OPEN"
+    "ET00439706|20261223": "NOT_OPEN",
+    "ET00451914|20261120": "NOT_OPEN",
+    "ET00451914|20261121": "NOT_OPEN",
+    "ET00451914|20261122": "NOT_OPEN",
+    "ET00451914|20261123": "NOT_OPEN",
+    "ET00451914|20261124": "NOT_OPEN",
+    "ET00451914|20261119": "NOT_OPEN",
+    "ET00451914|20261125": "NOT_OPEN",
+    "ET00524518|20261120": "BOOKABLE",
+    "ET00524518|20261121": "NOT_OPEN",
+    "ET00524518|20261122": "NOT_OPEN",
+    "ET00524518|20261123": "NOT_OPEN",
+    "ET00524518|20261124": "NOT_OPEN",
+    "ET00524518|20261125": "NOT_OPEN",
+    "ET00524518|20261126": "NOT_OPEN"
   },
   "fail_streak": 0
 }
