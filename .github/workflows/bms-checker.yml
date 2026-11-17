@@ -6,6 +6,10 @@ on:
     - cron: '14,44 * * * *'
   workflow_dispatch:  # Triggered by cron-job.org (or the manual button)
 
+concurrency:
+  group: bms-ticket-checker
+  cancel-in-progress: false
+
 jobs:
   check-tickets:
     runs-on: ubuntu-latest
