@@ -1,5 +1,276 @@
 {
-  "shows": {},
+  "shows": {
+    "ACAS|40308|20261217|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261217",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40308|20261217|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40308|20261217|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261217",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40309|20261217|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:20 PM",
+      "date": "20261217",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40309|20261217|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:20 PM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40309|20261217|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:20 PM",
+      "date": "20261217",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40311|20261217|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261217",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40311|20261217|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40311|20261217|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261217",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40313|20261218|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261218",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40313|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40313|20261218|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261218",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40316|20261218|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261218",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40316|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40316|20261218|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261218",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "2",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40318|20261219|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261219",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40318|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40318|20261219|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261219",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40321|20261219|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261219",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40321|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40321|20261219|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261219",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "2",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40323|20261220|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261220",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40323|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40323|20261220|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:15 AM",
+      "date": "20261220",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40326|20261220|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261220",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40326|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "2",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40326|20261220|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:30 PM",
+      "date": "20261220",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    }
+  },
   "dates": {
     "ET00439706|20261221": "NOT_OPEN",
     "ET00439706|20261222": "NOT_OPEN",
