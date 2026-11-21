@@ -269,6 +269,26 @@
       "status": "3",
       "movie": "Avengers: Doomsday",
       "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "PRHN|259279|20261216|GOLD": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "05:45 PM",
+      "date": "20261216",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Dune: Part Three",
+      "screen": "PCX Screen \u00b7 English \u2022 2D"
+    },
+    "PRHN|259280|20261216|GOLD": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:50 PM",
+      "date": "20261216",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "1",
+      "movie": "Dune: Part Three",
+      "screen": "PCX Screen \u00b7 English \u2022 2D"
     }
   },
   "dates": {
@@ -301,19 +321,19 @@
       "movie": "Avengers: Doomsday"
     },
     "ET00491771|20261217": {
-      "status": "AVAILABLE",
+      "status": "BOOKABLE",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261218": {
-      "status": "AVAILABLE",
+      "status": "NOT_OPEN",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261219": {
-      "status": "AVAILABLE",
+      "status": "NOT_OPEN",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261220": {
-      "status": "BOOKABLE",
+      "status": "NOT_OPEN",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261221": {
@@ -326,6 +346,10 @@
     },
     "ET00491771|20261223": {
       "status": "NOT_OPEN",
+      "movie": "Dune: Part Three"
+    },
+    "ET00491771|20261216": {
+      "status": "AVAILABLE",
       "movie": "Dune: Part Three"
     }
   },
