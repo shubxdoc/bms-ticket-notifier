@@ -306,7 +306,7 @@
       "date": "20261217",
       "cat": "GOLD",
       "price": "295.00",
-      "status": "3",
+      "status": "2",
       "movie": "Avengers: Doomsday",
       "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
     },
@@ -336,7 +336,7 @@
       "date": "20261218",
       "cat": "GOLD",
       "price": "295.00",
-      "status": "3",
+      "status": "2",
       "movie": "Avengers: Doomsday",
       "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
     },
@@ -366,7 +366,7 @@
       "date": "20261219",
       "cat": "GOLD",
       "price": "295.00",
-      "status": "3",
+      "status": "2",
       "movie": "Avengers: Doomsday",
       "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
     },
@@ -396,7 +396,7 @@
       "date": "20261220",
       "cat": "GOLD",
       "price": "295.00",
-      "status": "3",
+      "status": "2",
       "movie": "Avengers: Doomsday",
       "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
     },
@@ -426,7 +426,7 @@
       "date": "20261216",
       "cat": "GOLD",
       "price": "250.00",
-      "status": "3",
+      "status": "2",
       "movie": "Dune: Part Three",
       "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
     },
@@ -452,7 +452,7 @@
     },
     "ACAS|40492|20261217|SEMI RECLINERS": {
       "venue": "AAA Cinemas: Ameerpet",
-      "time": "07:25 PM",
+      "time": "07:20 PM",
       "date": "20261217",
       "cat": "SEMI RECLINERS",
       "price": "300.00",
@@ -462,7 +462,7 @@
     },
     "ACAS|40492|20261217|GOLD": {
       "venue": "AAA Cinemas: Ameerpet",
-      "time": "07:25 PM",
+      "time": "07:20 PM",
       "date": "20261217",
       "cat": "GOLD",
       "price": "250.00",
