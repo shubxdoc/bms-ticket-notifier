@@ -236,7 +236,7 @@
       "date": "20261220",
       "cat": "LOUNGERS",
       "price": "295.00",
-      "status": "3",
+      "status": "2",
       "movie": "Avengers: Doomsday",
       "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
     },
@@ -289,6 +289,566 @@
       "status": "1",
       "movie": "Dune: Part Three",
       "screen": "PCX Screen \u00b7 English \u2022 2D"
+    },
+    "ACAS|40310|20261217|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261217",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40310|20261217|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40310|20261217|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261217",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40315|20261218|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261218",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40315|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40315|20261218|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261218",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40497|20261219|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261219",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40497|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40497|20261219|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261219",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40508|20261220|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261220",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40508|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40508|20261220|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:25 PM",
+      "date": "20261220",
+      "cat": "LOUNGERS",
+      "price": "295.00",
+      "status": "3",
+      "movie": "Avengers: Doomsday",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 MS - Infinity Vision"
+    },
+    "ACAS|40404|20261216|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:25 PM",
+      "date": "20261216",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40404|20261216|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:25 PM",
+      "date": "20261216",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40405|20261216|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261216",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40405|20261216|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261216",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40492|20261217|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:25 PM",
+      "date": "20261217",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40492|20261217|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:25 PM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40493|20261217|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261217",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40493|20261217|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40407|20261218|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 AM",
+      "date": "20261218",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY DIGITAL 7.1 \u00b7 English \u2022 2D"
+    },
+    "ACAS|40407|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 AM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY DIGITAL 7.1 \u00b7 English \u2022 2D"
+    },
+    "ACAS|40403|20261218|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261218",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40403|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40403|20261218|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261218",
+      "cat": "LOUNGERS",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40400|20261218|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:05 PM",
+      "date": "20261218",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40400|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:05 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40411|20261218|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:10 PM",
+      "date": "20261218",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40411|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:10 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40401|20261218|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261218",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40401|20261218|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40401|20261218|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261218",
+      "cat": "LOUNGERS",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40506|20261219|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 AM",
+      "date": "20261219",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY DIGITAL 7.1 \u00b7 English \u2022 2D"
+    },
+    "ACAS|40506|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 AM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY DIGITAL 7.1 \u00b7 English \u2022 2D"
+    },
+    "ACAS|40496|20261219|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261219",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40496|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40496|20261219|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261219",
+      "cat": "LOUNGERS",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40499|20261219|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:05 PM",
+      "date": "20261219",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40499|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:05 PM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40500|20261219|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:10 PM",
+      "date": "20261219",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40500|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:10 PM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40498|20261219|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261219",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40498|20261219|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261219",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40498|20261219|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261219",
+      "cat": "LOUNGERS",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40517|20261220|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 AM",
+      "date": "20261220",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY DIGITAL 7.1 \u00b7 English \u2022 2D"
+    },
+    "ACAS|40517|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 AM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY DIGITAL 7.1 \u00b7 English \u2022 2D"
+    },
+    "ACAS|40507|20261220|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261220",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40507|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40507|20261220|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "01:15 PM",
+      "date": "20261220",
+      "cat": "LOUNGERS",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40510|20261220|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:05 PM",
+      "date": "20261220",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40510|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "04:05 PM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40511|20261220|SEMI RECLINERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:10 PM",
+      "date": "20261220",
+      "cat": "SEMI RECLINERS",
+      "price": "300.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40511|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "07:10 PM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LED SCREEN DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40509|20261220|RECLINER": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261220",
+      "cat": "RECLINER",
+      "price": "350.00",
+      "status": "0",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40509|20261220|GOLD": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261220",
+      "cat": "GOLD",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
+    },
+    "ACAS|40509|20261220|LOUNGERS": {
+      "venue": "AAA Cinemas: Ameerpet",
+      "time": "10:30 PM",
+      "date": "20261220",
+      "cat": "LOUNGERS",
+      "price": "250.00",
+      "status": "3",
+      "movie": "Dune: Part Three",
+      "screen": "LASER DOLBY ATMOS \u00b7 English \u2022 2D"
     }
   },
   "dates": {
@@ -321,19 +881,19 @@
       "movie": "Avengers: Doomsday"
     },
     "ET00491771|20261217": {
-      "status": "BOOKABLE",
+      "status": "AVAILABLE",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261218": {
-      "status": "NOT_OPEN",
+      "status": "AVAILABLE",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261219": {
-      "status": "NOT_OPEN",
+      "status": "AVAILABLE",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261220": {
-      "status": "NOT_OPEN",
+      "status": "BOOKABLE",
       "movie": "Dune: Part Three"
     },
     "ET00491771|20261221": {
