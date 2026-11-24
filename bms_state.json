@@ -19,6 +19,26 @@
       "status": "1",
       "movie": "Dune: Part Three",
       "screen": "PCX Screen \u00b7 English \u2022 2D"
+    },
+    "PRHN|259424|20261219|GOLD + 3D GlassL": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:00 AM",
+      "date": "20261219",
+      "cat": "GOLD + 3D GlassL",
+      "price": "400.00",
+      "status": "2",
+      "movie": "Avengers: Doomsday",
+      "screen": "Infinity Vision 3D/PCX Screen \u00b7 English \u2022 MS-Infinity Vsn 3d"
+    },
+    "PRHN|259271|20261217|GOLD": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "08:20 PM",
+      "date": "20261217",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "2",
+      "movie": "Dune: Part Three",
+      "screen": "PCX Screen \u00b7 English \u2022 2D"
     }
   },
   "dates": {
@@ -44,6 +64,22 @@
     },
     "ET00491771|20261222": {
       "status": "NOT_OPEN",
+      "movie": "Dune: Part Three"
+    },
+    "ET00439706|20261217": {
+      "status": "AVAILABLE",
+      "movie": "Avengers: Doomsday"
+    },
+    "ET00439706|20261219": {
+      "status": "BOOKABLE",
+      "movie": "Avengers: Doomsday"
+    },
+    "ET00491771|20261217": {
+      "status": "AVAILABLE",
+      "movie": "Dune: Part Three"
+    },
+    "ET00491771|20261219": {
+      "status": "BOOKABLE",
       "movie": "Dune: Part Three"
     }
   },
