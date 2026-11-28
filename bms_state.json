@@ -69,6 +69,16 @@
       "status": "1",
       "movie": "Dune: Part Three",
       "screen": "PCX Screen \u00b7 English \u2022 2D"
+    },
+    "PRHN|259260|20261218|GOLD": {
+      "venue": "Prasads Multiplex: Hyderabad",
+      "time": "05:20 PM",
+      "date": "20261218",
+      "cat": "GOLD",
+      "price": "295.00",
+      "status": "2",
+      "movie": "Dune: Part Three",
+      "screen": "PCX Screen \u00b7 English \u2022 2D"
     }
   },
   "dates": {
